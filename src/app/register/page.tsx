@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Iridescence from '@/components/backgrounds/Iridescence'
+
 import { useUser } from '@/contexts/UserContext'
 
 let faceLandmarker: any, runningMode: 'IMAGE' | 'VIDEO' = 'IMAGE', webcamRunning = false, lastVideoTime = -1, results: any, drawingUtils: any = null
@@ -99,12 +99,20 @@ export default function RegisterPage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      <Iridescence color={[1,1,1]} mouseReact={false} amplitude={0.1} speed={1.0} className="absolute inset-0" />
+      {/* Globe World Tour background via iframe */}
+      <iframe
+        src="/globe-bg.html"
+        className="absolute inset-0 w-full h-full border-0"
+        style={{ zIndex: 0, pointerEvents: 'none' }}
+        title="Globe Background"
+        aria-hidden="true"
+        tabIndex={-1}
+      />
       <style>{`video{transform:rotateY(180deg)}canvas.mirror{transform:rotateY(180deg)}.invisible{opacity:.15;pointer-events:none}`}</style>
       <div className="relative z-10 px-4 py-8 max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2"><span className="bg-gradient-to-r from-black via-purple-800 to-blue-800 bg-clip-text text-transparent">📝 Create Account</span></h1>
-          <p className="text-gray-600">Complete face verification to register your account</p>
+          <h1 className="text-4xl font-bold mb-2"><span className="bg-gradient-to-r from-white via-purple-300 to-cyan-300 bg-clip-text text-transparent">📝 Create Account</span></h1>
+          <p className="text-white/80">Complete face verification to register your account</p>
         </div>
         <section ref={demosSectionRef} className="invisible transition-opacity duration-500">
           <div className="bg-white/90 backdrop-blur-lg rounded-xl shadow-xl border border-white/30 overflow-hidden mb-6">

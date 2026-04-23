@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { Send, Upload, Paperclip, X, Bot, CheckCircle, Circle, ArrowRight, CreditCard, Building, Globe, FileText, Banknote, QrCode, Mic } from 'lucide-react'
+import { Send, Upload, Paperclip, X, CheckCircle, Circle, ArrowRight, CreditCard, Globe, FileText, Banknote, QrCode, Mic } from 'lucide-react'
+import VoiceOrb from '@/components/ui/VoiceOrb'
 import { useLanguage } from '@/contexts/LanguageContext'
 import GradientBackground from "@/components/backgrounds/GradientBackground"
 import { motion, AnimatePresence } from 'framer-motion'
@@ -338,27 +339,22 @@ export default function OnboardingPage() {
       </div>
       
       <div className="relative z-10 flex h-screen">
-        {/* Left Side - Avatar Section */}
-        <div className="w-1/2 flex flex-col items-center justify-center p-8">
-          <h2 className="text-xl md:text-3xl font-bold mb-6">
+        {/* Left Side - Voice Orb Section */}
+        <div className="w-1/2 flex flex-col items-center justify-center p-8 gap-0">
+          {/* Title — sits above the orb */}
+          <h2 className="text-xl md:text-3xl font-bold mb-4 text-center">
             <span className="bg-gradient-to-r from-blue-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
               Travel Onboarding Assistant
             </span>
           </h2>
-          {/* Avatar Container - Robot Fallback */}
-          <div className="relative mb-8">
-            <div className="w-48 h-48 rounded-full bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 flex items-center justify-center shadow-2xl">
-              <div className="w-44 h-44 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <Bot className="w-20 h-20 text-white" />
-              </div>
-            </div>
-            {/* Animated rings */}
-            <div className="absolute inset-0 rounded-full border-2 border-purple-300/30 animate-ping" style={{ animationDuration: '3s' }} />
-            <div className="absolute -inset-3 rounded-full border border-blue-300/20 animate-ping" style={{ animationDuration: '4s' }} />
+
+          {/* Voice Orb — replaces the old gradient circle + Bot icon */}
+          <div style={{ width: '18em', height: '18em', position: 'relative' }}>
+            <VoiceOrb />
           </div>
-          
-          {/* Avatar Status */}
-          <div className="text-center mb-4">
+
+          {/* Status — sits below the orb */}
+          <div className="text-center mt-4">
             <div className="flex items-center justify-center space-x-2">
               <div className="w-2 h-2 rounded-full bg-green-500" />
               <span className="text-xs text-gray-600">Assistant Ready</span>
