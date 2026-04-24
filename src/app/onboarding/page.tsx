@@ -1,21 +1,29 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { Send, Upload, Paperclip, X, CheckCircle, Circle, ArrowRight, CreditCard, Globe, FileText, Banknote, QrCode, Mic } from 'lucide-react'
-import VoiceOrb from '@/components/ui/VoiceOrb'
+import { Send, Upload, Paperclip, X, Bot, CheckCircle, ArrowRight, CreditCard, Globe, FileText, Banknote, QrCode, Mic } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import GradientBackground from "@/components/backgrounds/GradientBackground"
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 
+interface MultiOption {
+  id: string
+  text: string
+}
+
 interface Message {
   id: string
   text: string
   sender: 'user' | 'bot'
   options?: ChatOption[]
-  type?: 'text' | 'options' | 'form' | 'checklist' | 'payment-setup' | 'completion'
+  type?: 'text' | 'options' | 'form' | 'checklist' | 'payment-setup' | 'completion' | 'multi-select' | 'text-input'
   files?: File[]
+  multiOptions?: MultiOption[]
+  multiOnSave?: (selectedIds: string[]) => void
+  textPlaceholder?: string
+  textOnSave?: (input: string) => void
 }
 
 interface ChatOption {
@@ -37,6 +45,9 @@ export default function OnboardingPage() {
   const [showConsentModal, setShowConsentModal] = useState(false)
   const [pendingPayment, setPendingPayment] = useState<string>('')
   const [isAvatarSpeaking, setIsAvatarSpeaking] = useState(false)
+  const [answeredMessageIds, setAnsweredMessageIds] = useState<Set<string>>(new Set())
+  const [multiSelectState, setMultiSelectState] = useState<Record<string, Set<string>>>({})
+  const [textInputState, setTextInputState] = useState<Record<string, string>>({})
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const welcomeTriggeredRef = useRef(false)
@@ -47,21 +58,21 @@ export default function OnboardingPage() {
 
   useEffect(() => { scrollToBottom() }, [messages])
 
+  const genId = (prefix: string = 'm') => `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+
   // Trigger welcome on mount
   useEffect(() => {
     if (!welcomeTriggeredRef.current) {
       welcomeTriggeredRef.current = true
       setTimeout(() => {
+        const msgId = genId('welcome')
         const welcomeMessage: Message = {
-          id: Date.now().toString(),
-          text: '**Welcome to Zen Travel!** 🌍✈️\n\nI\'m your Travel Onboarding Assistant. I\'ll help you set up your account and get started with your travel planning journey.\n\nWhere are you in your travel journey?',
+          id: msgId,
+          text: '🌍✈️ **Welcome to Zen Travel!**\n\nI\'m your Personal Travel Agent — here to craft trips that actually fit you.',
           sender: 'bot',
           type: 'options',
           options: [
-            { id: 'just-starting', text: '🆕 Just starting to plan', icon: <Circle className="w-4 h-4" />, action: () => handleJourneySelection('just-starting') },
-            { id: 'have-passport', text: '📋 Have passport ready', icon: <Circle className="w-4 h-4" />, action: () => handleJourneySelection('have-passport') },
-            { id: 'frequent-traveller', text: '✈️ Frequent traveller', icon: <Circle className="w-4 h-4" />, action: () => handleJourneySelection('frequent-traveller') },
-            { id: 'first-trip', text: '🌟 Planning first trip', icon: <Circle className="w-4 h-4" />, action: () => handleJourneySelection('first-trip') },
+            { id: 'get-started', text: '🚀 Get Started', icon: <ArrowRight className="w-4 h-4" />, action: () => handleGetStarted(msgId) },
           ]
         }
         setMessages([welcomeMessage])
@@ -71,7 +82,7 @@ export default function OnboardingPage() {
 
   const addBotMessage = (text: string, options?: ChatOption[], type?: Message['type']) => {
     const newMessage: Message = {
-      id: Date.now().toString(),
+      id: genId('bot'),
       text,
       sender: 'bot',
       options,
@@ -82,7 +93,7 @@ export default function OnboardingPage() {
 
   const addUserMessage = (text: string, files?: File[]) => {
     const newMessage: Message = {
-      id: Date.now().toString(),
+      id: genId('user'),
       text,
       sender: 'user',
       files
@@ -90,19 +101,12 @@ export default function OnboardingPage() {
     setMessages(prev => [...prev, newMessage])
   }
 
-  const handleJourneySelection = (journey: string) => {
-    const labels: Record<string,string> = {
-      'just-starting': '🆕 Just starting to plan',
-      'have-passport': '📋 Have passport ready',
-      'frequent-traveller': '✈️ Frequent traveller',
-      'first-trip': '🌟 Planning first trip'
-    }
-    addUserMessage(labels[journey] || journey)
-    setUserData((prev: any) => ({ ...prev, journey }))
-
+  const handleGetStarted = (messageId: string) => {
+    addUserMessage('🚀 Get Started')
+    setAnsweredMessageIds(prev => new Set([...prev, messageId]))
     setTimeout(() => {
       addBotMessage(
-        '**Great choice!** 🎉\n\nLet me help you get set up. Here\'s your onboarding checklist. Complete each step to unlock your full travel experience:',
+        'Let\'s get you set up! Complete the checklist below to unlock your full travel experience:',
         [], 'checklist'
       )
     }, 800)
@@ -118,20 +122,175 @@ export default function OnboardingPage() {
     }, 500)
   }
 
+  // ============ Travel Preferences Flow ============
+
+  const askSinglePreference = (
+    text: string,
+    options: { id: string; text: string }[],
+    onAnswer: (optionId: string, optionText: string) => void
+  ) => {
+    const msgId = genId('pref')
+    const chatOptions: ChatOption[] = options.map(opt => ({
+      id: opt.id,
+      text: opt.text,
+      action: () => {
+        addUserMessage(opt.text)
+        setAnsweredMessageIds(prev => new Set([...prev, msgId]))
+        setTimeout(() => onAnswer(opt.id, opt.text), 700)
+      }
+    }))
+    const newMessage: Message = {
+      id: msgId,
+      text,
+      sender: 'bot',
+      type: 'options',
+      options: chatOptions
+    }
+    setMessages(prev => [...prev, newMessage])
+  }
+
+  const askMultiPreference = (
+    text: string,
+    options: MultiOption[],
+    onSave: (selected: MultiOption[]) => void
+  ) => {
+    const msgId = genId('prefmulti')
+    const newMessage: Message = {
+      id: msgId,
+      text,
+      sender: 'bot',
+      type: 'multi-select',
+      multiOptions: options,
+      multiOnSave: (selectedIds: string[]) => {
+        const selected = options.filter(o => selectedIds.includes(o.id))
+        addUserMessage(selected.map(s => s.text).join(', '))
+        setAnsweredMessageIds(prev => new Set([...prev, msgId]))
+        setTimeout(() => onSave(selected), 700)
+      }
+    }
+    setMessages(prev => [...prev, newMessage])
+  }
+
+  const askTextPreference = (
+    text: string,
+    placeholder: string,
+    onSave: (input: string) => void
+  ) => {
+    const msgId = genId('preftext')
+    const newMessage: Message = {
+      id: msgId,
+      text,
+      sender: 'bot',
+      type: 'text-input',
+      textPlaceholder: placeholder,
+      textOnSave: (input: string) => {
+        addUserMessage(input.trim() || 'No restrictions')
+        setAnsweredMessageIds(prev => new Set([...prev, msgId]))
+        setTimeout(() => onSave(input), 700)
+      }
+    }
+    setMessages(prev => [...prev, newMessage])
+  }
+
   const handlePreferencesSetup = () => {
     addUserMessage('🌍 Set travel preferences')
     setTimeout(() => {
-      addBotMessage(
-        '**Setting up your travel preferences...**\n\nI\'m configuring your preferred destinations and travel style based on your profile.',
-        [], 'text'
-      )
+      addBotMessage('Help me understand your travel style so I can plan the perfect trip for you.')
+      setTimeout(() => askPrefQ1(), 1000)
     }, 500)
-    setTimeout(() => {
-      addBotMessage('✅ **Travel preferences saved!** Your AI itinerary planner will now use these preferences.')
-      setCompletedSteps(prev => new Set([...prev, 'preferences']))
-      setTimeout(() => addBotMessage('Here\'s your updated checklist:', [], 'checklist'), 800)
-    }, 2000)
   }
+
+  const askPrefQ1 = () => {
+    askSinglePreference(
+      '🧭 **1. What\'s your travel pace?**',
+      [
+        { id: 'packed', text: '🔥 Packed & Explorative — I want to see everything' },
+        { id: 'leisure', text: '🌿 Leisure & Flexible — I prefer to take it slow' },
+      ],
+      (id) => { setUserData((p: any) => ({ ...p, pace: id })); askPrefQ2() }
+    )
+  }
+
+  const askPrefQ2 = () => {
+    askSinglePreference(
+      '💰 **2. What\'s your budget style?**',
+      [
+        { id: 'luxury', text: '💎 Luxury Splurge — I\'m here to treat myself' },
+        { id: 'budget', text: '💸 Budget-Friendly — Smart spending all the way' },
+      ],
+      (id) => { setUserData((p: any) => ({ ...p, budget: id })); askPrefQ3() }
+    )
+  }
+
+  const askPrefQ3 = () => {
+    askMultiPreference(
+      '🎯 **3. What attracts you to a destination?**\n\n(Choose all that apply, can choose more than 1)',
+      [
+        { id: 'scenery', text: '🌄 Natural Scenery' },
+        { id: 'landmarks', text: '🗼 Famous Landmarks' },
+        { id: 'hidden', text: '🧭 Hidden Gems' },
+        { id: 'food', text: '🍜 Famous Food' },
+        { id: 'history', text: '🏛️ Historical Sites' },
+        { id: 'culture', text: '🎨 Local Culture & Art' },
+      ],
+      (selected) => { setUserData((p: any) => ({ ...p, attractions: selected.map(s => s.id) })); askPrefQ4() }
+    )
+  }
+
+  const askPrefQ4 = () => {
+    askSinglePreference(
+      '⚡ **4. What kind of activities do you prefer?**',
+      [
+        { id: 'active', text: '🧗 Physically Active — Adventure, movement, excitement' },
+        { id: 'relaxing', text: '🧘 Mentally Relaxing — Calm, scenic, and peaceful' },
+      ],
+      (id) => { setUserData((p: any) => ({ ...p, activities: id })); askPrefQ5() }
+    )
+  }
+
+  const askPrefQ5 = () => {
+    askSinglePreference(
+      '🏨 **5. What\'s your accommodation style?**',
+      [
+        { id: 'simple', text: '🛏️ Just a Place to Sleep — Simple & practical' },
+        { id: 'experience', text: '✨ Experience-Focused Stay — Unique hotels & vibes' },
+      ],
+      (id) => { setUserData((p: any) => ({ ...p, accommodation: id })); askPrefQ6() }
+    )
+  }
+
+  const askPrefQ6 = () => {
+    askSinglePreference(
+      '🍽️ **6. How important is food during your trip?**',
+      [
+        { id: 'fuel', text: '⛽ Food is Fuel — Just something to keep me going' },
+        { id: 'destination', text: '🍜 Food is the Destination — I travel for the food' },
+      ],
+      (id) => { setUserData((p: any) => ({ ...p, food: id })); askPrefQ7() }
+    )
+  }
+
+  const askPrefQ7 = () => {
+    askTextPreference(
+      '⚠️ **7. Any dietary restrictions or dislikes?**\n\n(Allergies, preferences, or foods you avoid)',
+      'e.g., vegetarian, no seafood, nut allergy...',
+      (text) => { setUserData((p: any) => ({ ...p, dietary: text })); finishPreferences() }
+    )
+  }
+
+  const finishPreferences = () => {
+    setTimeout(() => {
+      addBotMessage(
+        '🎉 **All Set!**\n\n✅ **Travel Preferences Saved!**\n\nYour AI Itinerary Planner will now craft trips tailored exactly to your style, interests, and needs.'
+      )
+      setCompletedSteps(prev => new Set([...prev, 'preferences']))
+      setTimeout(() => {
+        addBotMessage('Here\'s your updated checklist:', [], 'checklist')
+      }, 1500)
+    }, 500)
+  }
+
+  // ============ Payment Flow (unchanged) ============
 
   const handlePaymentSetup = () => {
     addUserMessage('💳 Set up payment')
@@ -179,7 +338,6 @@ export default function OnboardingPage() {
     setSelectedFiles([])
     setIsLoading(true)
 
-    // Simple echo response
     setTimeout(() => {
       addBotMessage(`I received your message: "${textToSend}". Let me help you with that!`)
       setIsLoading(false)
@@ -205,16 +363,34 @@ export default function OnboardingPage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
+  const toggleMultiSelect = (messageId: string, optionId: string) => {
+    setMultiSelectState(prev => {
+      const current = new Set(prev[messageId] || [])
+      if (current.has(optionId)) current.delete(optionId)
+      else current.add(optionId)
+      return { ...prev, [messageId]: current }
+    })
+  }
+
   const renderMessageContent = (message: Message) => {
     switch (message.type) {
-      case 'options':
+      case 'options': {
+        const isAnswered = answeredMessageIds.has(message.id)
         return (
           <div>
             {message.text && <div className="text-sm leading-relaxed mb-3 [&>ul]:space-y-1 [&>ul>li]:block"><ReactMarkdown>{message.text}</ReactMarkdown></div>}
             <div className="space-y-2">
               {message.options?.map((option) => (
-                <button key={option.id} onClick={option.action}
-                  className="w-full text-left p-3 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 hover:bg-white hover:border-blue-300 transition-all duration-200 flex items-center space-x-3">
+                <button
+                  key={option.id}
+                  onClick={isAnswered ? undefined : option.action}
+                  disabled={isAnswered}
+                  className={`w-full text-left p-3 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 transition-all duration-200 flex items-center space-x-3 ${
+                    isAnswered
+                      ? 'opacity-50 cursor-not-allowed'
+                      : 'hover:bg-white hover:border-blue-300'
+                  }`}
+                >
                   {option.icon && <span>{option.icon}</span>}
                   <span className="text-sm text-gray-700">{option.text}</span>
                 </button>
@@ -222,6 +398,80 @@ export default function OnboardingPage() {
             </div>
           </div>
         )
+      }
+      case 'multi-select': {
+        const isAnswered = answeredMessageIds.has(message.id)
+        const selected = multiSelectState[message.id] || new Set<string>()
+        return (
+          <div>
+            {message.text && <div className="text-sm leading-relaxed mb-3"><ReactMarkdown>{message.text}</ReactMarkdown></div>}
+            <div className="space-y-2">
+              {message.multiOptions?.map(opt => {
+                const isSelected = selected.has(opt.id)
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={isAnswered ? undefined : () => toggleMultiSelect(message.id, opt.id)}
+                    disabled={isAnswered}
+                    className={`w-full text-left p-3 bg-white/80 backdrop-blur-sm rounded-lg border-2 transition-all duration-200 flex items-center space-x-3 ${
+                      isSelected
+                        ? 'border-[#C9A84C] bg-[#C9A84C]/10'
+                        : 'border-gray-200 hover:border-blue-300'
+                    } ${isAnswered ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  >
+                    <span className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
+                      isSelected ? 'bg-[#C9A84C] border-[#C9A84C]' : 'border-gray-300 bg-white'
+                    }`}>
+                      {isSelected && <span className="text-white text-xs font-bold leading-none">✓</span>}
+                    </span>
+                    <span className="text-sm text-gray-700">{opt.text}</span>
+                  </button>
+                )
+              })}
+            </div>
+            {!isAnswered && (
+              <div className="flex justify-end mt-3">
+                <button
+                  onClick={() => message.multiOnSave?.(Array.from(selected))}
+                  disabled={selected.size === 0}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
+                >
+                  Save & Continue
+                </button>
+              </div>
+            )}
+          </div>
+        )
+      }
+      case 'text-input': {
+        const isAnswered = answeredMessageIds.has(message.id)
+        const currentText = textInputState[message.id] || ''
+        return (
+          <div>
+            {message.text && <div className="text-sm leading-relaxed mb-3"><ReactMarkdown>{message.text}</ReactMarkdown></div>}
+            <textarea
+              value={currentText}
+              onChange={(e) => setTextInputState(prev => ({ ...prev, [message.id]: e.target.value }))}
+              placeholder={message.textPlaceholder}
+              disabled={isAnswered}
+              rows={2}
+              className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm ${
+                isAnswered ? 'opacity-60 cursor-not-allowed bg-gray-50' : 'bg-white'
+              }`}
+            />
+            {!isAnswered && (
+              <div className="flex justify-end mt-2">
+                <button
+                  onClick={() => message.textOnSave?.(currentText)}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
+                >
+                  Save & Continue
+                </button>
+              </div>
+            )}
+          </div>
+        )
+      }
       case 'form':
         return (
           <div className="mt-3">
@@ -229,8 +479,18 @@ export default function OnboardingPage() {
             <div className="bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 p-4">
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[{l:'Full Name',p:'Your full name'},{l:'Phone',p:'+60 12 345 6789'},{l:'Nationality',p:'Malaysian'},{l:'Passport Number',p:'A12345678'}].map(f=>(
-                    <div key={f.l}><label className="block text-sm font-medium text-gray-700 mb-1">{f.l}</label><input type="text" placeholder={f.p} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"/></div>
+                  {[
+                    { l: 'Full Name', p: 'Your full name' },
+                    { l: 'Phone', p: '+60 12 345 6789' },
+                    { l: 'Nationality', p: 'Malaysian' },
+                    { l: 'Passport Number', p: 'A12345678' },
+                    { l: 'MBTI', p: 'e.g., INFJ, ENTP' },
+                    { l: 'Email Address', p: 'you@example.com' },
+                  ].map(f => (
+                    <div key={f.l}>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">{f.l}</label>
+                      <input type="text" placeholder={f.p} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                    </div>
                   ))}
                 </div>
                 <div className="flex justify-end pt-2">
@@ -330,31 +590,36 @@ export default function OnboardingPage() {
   return (
     <div className="relative min-h-screen overflow-hidden">
       <GradientBackground />
-      
+
       {/* Skip Onboarding Button */}
       <div className="absolute top-6 left-16 z-20">
         <button onClick={() => router.push('/home')} className="bg-white/30 backdrop-blur-md text-gray-600 text-sm font-semibold px-4 py-2 rounded-lg shadow-md hover:bg-white/50 transition-colors">
           Skip Onboarding
         </button>
       </div>
-      
+
       <div className="relative z-10 flex h-screen">
-        {/* Left Side - Voice Orb Section */}
-        <div className="w-1/2 flex flex-col items-center justify-center p-8 gap-0">
-          {/* Title — sits above the orb */}
-          <h2 className="text-xl md:text-3xl font-bold mb-4 text-center">
+        {/* Left Side - Avatar Section */}
+        <div className="w-1/2 flex flex-col items-center justify-center p-8">
+          <h2 className="text-xl md:text-3xl font-bold mb-6">
             <span className="bg-gradient-to-r from-blue-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
               Travel Onboarding Assistant
             </span>
           </h2>
-
-          {/* Voice Orb — replaces the old gradient circle + Bot icon */}
-          <div style={{ width: '18em', height: '18em', position: 'relative' }}>
-            <VoiceOrb />
+          {/* Avatar Container - Robot Fallback */}
+          <div className="relative mb-8">
+            <div className="w-48 h-48 rounded-full bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 flex items-center justify-center shadow-2xl">
+              <div className="w-44 h-44 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <Bot className="w-20 h-20 text-white" />
+              </div>
+            </div>
+            {/* Animated rings */}
+            <div className="absolute inset-0 rounded-full border-2 border-purple-300/30 animate-ping" style={{ animationDuration: '3s' }} />
+            <div className="absolute -inset-3 rounded-full border border-blue-300/20 animate-ping" style={{ animationDuration: '4s' }} />
           </div>
 
-          {/* Status — sits below the orb */}
-          <div className="text-center mt-4">
+          {/* Avatar Status */}
+          <div className="text-center mb-4">
             <div className="flex items-center justify-center space-x-2">
               <div className="w-2 h-2 rounded-full bg-green-500" />
               <span className="text-xs text-gray-600">Assistant Ready</span>
@@ -442,7 +707,7 @@ export default function OnboardingPage() {
                   style={{ minHeight: '48px', maxHeight: '120px' }}
                 />
               </div>
-              
+
               <div className="flex items-center space-x-2">
                 <button onClick={() => fileInputRef.current?.click()}
                   className="p-3 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-full transition-colors" title="Attach file">
@@ -457,7 +722,7 @@ export default function OnboardingPage() {
                 </button>
               </div>
             </div>
-            
+
             <input ref={fileInputRef} type="file" multiple onChange={handleFileSelect} className="hidden" accept="*/*" />
             <p className="text-xs text-gray-500 mt-2 text-center">Type your message or select an option above</p>
           </div>
