@@ -719,7 +719,7 @@ After generating the JSON, add a brief friendly conversational message below it.
         }
         setMessages(prev => [...prev, ambiguityMsg])
       } else {
-        generateItinerary(initialMessages, { tripDataOverride: parsedData })
+        generateItinerary(initialMessages, { tripDataOverride: parsedData, userPrefsOverride: prefs })
       }
     } else {
       router.push('/trip-setup')
@@ -902,7 +902,7 @@ After generating the JSON, add a brief friendly conversational message below it.
 
   const generateItinerary = async (
     chatHistory: ChatMessage[],
-    opts?: { skipped?: { id?: string; title: string }[]; tripDataOverride?: any }
+    opts?: { skipped?: { id?: string; title: string }[]; tripDataOverride?: any; userPrefsOverride?: UserPreferences | null }
   ) => {
     setIsLoading(true)
 
@@ -913,7 +913,8 @@ After generating the JSON, add a brief friendly conversational message below it.
 
     // Use override when tripData state hasn't flushed yet (initial load race condition).
     const effectiveTripData = opts?.tripDataOverride ?? tripData
-    const steps = buildReasoningSteps(effectiveTripData, userPrefs, opts?.skipped ?? [])
+    const effectivePrefs = opts?.userPrefsOverride !== undefined ? opts.userPrefsOverride : userPrefs
+    const steps = buildReasoningSteps(effectiveTripData, effectivePrefs, opts?.skipped ?? [])
     const finalize = startReasoningStream(steps)
 
     try {
@@ -1227,7 +1228,7 @@ Please update the FULL itinerary JSON to include Fort Cornwallis as a destinatio
 - "type": "destination"
 - "price": "RM 20"
 - "duration": "~1.5 hours"
-- "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Fort_Cornwallis%2C_Penang.jpg/1280px-Fort_Cornwallis%2C_Penang.jpg"
+- "img": "https://image-tc.galaxy.tf/wijpeg-1qb17h2fs6qnppm3kxap6iynh/fort-cornwallis.jpg"
 - "tips": a practical tip for visiting
 - "highlights": ["Historic British fort", "Sri Rambai cannon", "Lighthouse", "Waterfront views"]
 - a realistic "time" that fits the day's flow without overlapping other activities

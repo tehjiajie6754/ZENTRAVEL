@@ -31,100 +31,109 @@ const categories = [
 
 const activities = [
   // Must See
-  { id: 'ms1', title: 'Penang Hill', category: 'Must See', img: 'https://images.unsplash.com/photo-1583209814683-c023dd293cc6?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ms2', title: 'Kek Lok Si Temple', category: 'Must See', img: 'https://live.staticflickr.com/65535/51878941270_73246f0794_b.jpg' },
-  { id: 'ms3', title: 'Fort Cornwallis', category: 'Must See', img: 'https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ms4', title: 'Penang National Park', category: 'Must See', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ms5', title: 'Cheong Fatt Tze Mansion', category: 'Must See', img: 'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ms6', title: 'Komtar Tower', category: 'Must See', img: 'https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ms7', title: 'Batu Ferringhi Beach', category: 'Must See', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ms8', title: 'Penang Bridge', category: 'Must See', img: 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ms9', title: 'Snake Temple', category: 'Must See', img: 'https://live.staticflickr.com/65535/51878941270_73246f0794_b.jpg' },
-  { id: 'ms10', title: 'Kapitan Keling Mosque', category: 'Must See', img: 'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?q=80&w=800&auto=format&fit=crop' },
+  { id: 'ms1', title: 'Georgetown Heritage site', category: 'Must See', img: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2b/93/54/36/caption.jpg?w=1200&h=1200&s=1' },
+  { id: 'ms2', title: 'George Town Street Art', category: 'Must See', img: 'https://www.toptravelsights.com/wp-content/uploads/2020/05/Penang-Street-Art-6.jpg' },
+  { id: 'ms3', title: 'Penang Hill', category: 'Must See', img: 'https://phbr.penanghill.gov.my/wp-content/uploads/2023/04/Funicular-Train.png' },
+  { id: 'ms4', title: 'Batu Ferringhi Beach', category: 'Must See', img: 'https://www.awaygowe.com/wp-content/uploads/2019/10/batu-ferringhi-reasons-featured2.webp' },
+  { id: 'ms5', title: 'Kek Lok Si Temple', category: 'Must See', img: 'https://www.asiakingtravel.com/cuploads/files/image-20241004111243-1.jpeg' },
+  { id: 'ms6', title: 'Fort Cornwallis', category: 'Must See', img: 'https://image-tc.galaxy.tf/wijpeg-1qb17h2fs6qnppm3kxap6iynh/fort-cornwallis.jpg' },
+  { id: 'ms7', title: 'Penang National Park', category: 'Must See', img: 'https://image-tc.galaxy.tf/wiwebp-1id9uitt9at82667rgvqgxuqg/two-people-walking-across-a-suspension-bridge-in-the-jungle-of-penang-national-park.webp' },
+  { id: 'ms8', title: 'Penang Bridge', category: 'Must See', img: 'https://image-tc.galaxy.tf/wiwebp-77oehjbfcav8rbb65k1r5ylp/golden-hour-view-of-penang-bridge-across-still-waters_standard.webp?crop=57%2C0%2C867%2C650' },
 
   // Great Food
-  { id: 'gf1', title: 'Char Koay Teow', category: 'Great Food', img: 'https://i1.wp.com/thokohmakan.com/wp-content/uploads/2020/04/20200408192454_IMG_6423-scaled.jpg?resize=800%2C530&ssl=1' },
-  { id: 'gf2', title: 'Assam Laksa', category: 'Great Food', img: 'https://images.deliveryhero.io/image/foodpanda/recipes/asam-laksa-recipe-1.jpg' },
-  { id: 'gf3', title: 'Teochew Chendul', category: 'Great Food', img: 'https://livingnomads.com/wp-content/uploads/2023/06/25/teochew-cendol-penang-malaysia-30.jpeg' },
-  { id: 'gf4', title: 'Nasi Kandar', category: 'Great Food', img: 'https://th.bing.com/th/id/OIP.qLRBw5F_uCk3tPvGDTcI3wHaE8?w=213&h=150&c=6&o=5&dpr=1.4&pid=1.7' },
-  { id: 'gf5', title: 'Hokkien Mee', category: 'Great Food', img: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?q=80&w=800&auto=format&fit=crop' },
-  { id: 'gf6', title: 'Penang Rojak', category: 'Great Food', img: 'https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?q=80&w=800&auto=format&fit=crop' },
-  { id: 'gf7', title: 'Curry Mee', category: 'Great Food', img: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop' },
-  { id: 'gf8', title: 'Mee Goreng Mamak', category: 'Great Food', img: 'https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?q=80&w=800&auto=format&fit=crop' },
-  { id: 'gf9', title: 'Apom Balik', category: 'Great Food', img: 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=800&auto=format&fit=crop' },
-  { id: 'gf10', title: 'Oh Chien (Oyster Omelette)', category: 'Great Food', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop' },
+  { id: 'gf1', title: 'Char Kuey Teow', category: 'Great Food', img: 'https://rasamalaysia.com/wp-content/uploads/2009/11/char-koay-teow-thumb.jpg' },
+  { id: 'gf2', title: 'Assam Laksa', category: 'Great Food', img: 'https://www.unileverfoodsolutions.com.my/dam/global-ufs/mcos/SEA/calcmenu/recipes/MY-recipes/pasta-dishes/penang-asam-laksa/main-header.jpg' },
+  { id: 'gf3', title: 'Teochew Chendul', category: 'Great Food', img: 'https://images.squarespace-cdn.com/content/v1/62f1cb15a2cb083186ccd6d1/38891e02-9314-4aa2-9055-1ed9fb243593/Screenshot+2025-06-06+at+9.13.36%E2%80%AFAM.jpg' },
+  { id: 'gf4', title: 'Nasi Kandar', category: 'Great Food', img: 'https://images.squarespace-cdn.com/content/v1/5d7f2d797a64971f017f10ff/c53666ab-8cd6-42b2-8db0-7ccde82fd1da/09-05+HAMEEDIYAH+RESTAURANT+CP.png' },
+  { id: 'gf5', title: 'Hokkien Mee', category: 'Great Food', img: 'https://www.angsarap.net/wp-content/uploads/2014/12/Penang-Prawn-Mee-Wide.jpg' },
+  { id: 'gf6', title: 'Penang Rojak', category: 'Great Food', img: 'https://images.deliveryhero.io/image/fd-my/LH/bmsy-listing.jpg' },
+  { id: 'gf7', title: 'Curry Mee', category: 'Great Food', img: 'https://images.deliveryhero.io/image/fd-my/LH/p2os-listing.jpg' },
+  { id: 'gf8', title: 'Mee Goreng Mamak', category: 'Great Food', img: 'https://i.ytimg.com/vi/pOJEmDBgtSk/maxresdefault.jpg' },
+  { id: 'gf9', title: 'Apom Balik', category: 'Great Food', img: 'https://www.what2seeonline.com/wp-content/uploads/2016/08/DSCF7886.jpg' },
+  { id: 'gf10', title: 'Oh Chien (Oyster Omelette)', category: 'Great Food', img: 'https://images.lifestyleasia.com/wp-content/uploads/sites/5/2025/07/25175615/best-oyster-omelette-in-penang-oh-chien-george-town.jpg' },
+  { id: 'gf11', title: 'Toast', category: 'Great Food', img: 'https://www.penang-insider.com/livingpenang/wp-content/uploads/2018/03/FEATUREDRoti_Bakar_in_Penang-1.jpg' },
+  { id: 'gf12', title: 'Heritage Chinese Cuisine', category: 'Great Food', img: 'https://migrationology.com/wp-content/uploads/2015/06/tek-sen-restaurant-penang.jpg' },
+  { id: 'gf13', title: 'Bamboo Noodle', category: 'Great Food', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTfxgX5pW0Me3HQS2gslCiXk0V1mDzj9mK5cA&s' },
+  { id: 'gf14', title: 'Roti Canai', category: 'Great Food', img: 'https://www.elmundoeats.com/wp-content/uploads/2017/11/Roti-Canai-3-500x500.jpg' },
+  { id: 'gf15', title: 'Mee Sotong', category: 'Great Food', img: 'https://cdn.hungryonion.org/original/3X/3/b/3b0583a70d7c2d7956e1a2199c080d9cb6b5104f.JPG' },
+  { id: 'gf16', title: 'Green Tomyam Noodle', category: 'Great Food', img: 'https://axwwgrkdco.cloudimg.io/v7/__gmpics3__/f28466cd689b48afa63b27f882581d06.jpeg?width=1000' },
+  { id: 'gf17', title: 'Chee Cheong Fun (Steam rice rolled with shrimp paste)', category: 'Great Food', img: 'https://asianinspirations.com.au/wp-content/uploads/2023/08/PCCF-7.jpg' },
+  { id: 'gf18', title: 'Dimsum', category: 'Great Food', img: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/23/98/fb/87/dimsum.jpg' },
+  { id: 'gf19', title: 'Seafood', category: 'Great Food', img: 'https://penangfoodie.sgp1.digitaloceanspaces.com/2018/01/best-seafood-in-penang.jpg' },
+  { id: 'gf20', title: 'Lorbak', category: 'Great Food', img: 'https://cdn.hungryonion.org/original/3X/5/3/53fe49f0901ff4b6b1315b95ec941e2bbe1f129b.jpeg' },
+  { id: 'gf21', title: 'Char Koay Kak', category: 'Great Food', img: 'https://axwwgrkdco.cloudimg.io/v7/__gmpics3__/bb512c1f41a548969908aebe8328c583.jpeg?width=1000' },
+  { id: 'gf22', title: 'Seafood Popiah', category: 'Great Food', img: 'https://apicms.thestar.com.my/uploads/images/2023/06/13/2123105.jpg' },
+  { id: 'gf23', title: 'Lok Lok', category: 'Great Food', img: 'https://images.squarespace-cdn.com/content/v1/5d7f2d797a64971f017f10ff/e35f806d-e1d6-4f00-bf31-747d38a9a3aa/09-21+LOK-LOK+IN+PENANG+CP.png' },
+  { id: 'gf24', title: 'Koay Teow Th’ng', category: 'Great Food', img: 'https://axwwgrkdco.cloudimg.io/v7/__gmpics3__/8c7cb25cbcd64335a9f609e9c808b0de.jpeg?width=1000' },
+  { id: 'gf25', title: 'Duck Koay Chap', category: 'Great Food', img: 'https://mypenang.gov.my/uploads/page/51/images/Penang_FoodLifestyle_FB_KueyChiap.jpg' },
+  { id: 'gf26', title: 'Pi Pa Duck', category: 'Great Food', img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNd44d1bUqaF17MpCWfFXVsoP87v9s7c9Zfw&s' },
+  { id: 'gf27', title: 'Yam Rice', category: 'Great Food', img: 'https://axwwgrkdco.cloudimg.io/v7/__gmpics3__/01314cdcf50c4c919285cf049c680001.jpeg' },
+  { id: 'gf28', title: 'Durian', category: 'Great Food', img: 'https://media-cdn.tripadvisor.com/media/photo-s/18/a5/66/e2/shan-cheng-durian-penang.jpg' },
+  { id: 'gf29', title: 'Nyonya Kuih', category: 'Great Food', img: 'https://mypenang.gov.my/uploads/page/41/images/Penang_FoodLifestyle_FB_NyonyaKuih.jpg' },
 
   // Hidden Gem
-  { id: 'hg1', title: 'Tropical Spice Garden', category: 'Hidden Gem', img: 'https://images.unsplash.com/photo-1583209814683-c023dd293cc6?q=80&w=800&auto=format&fit=crop' },
-  { id: 'hg2', title: 'Avatar Secret Garden', category: 'Hidden Gem', img: 'https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?q=80&w=800&auto=format&fit=crop' },
-  { id: 'hg3', title: 'Pantai Kerachut', category: 'Hidden Gem', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop' },
-  { id: 'hg4', title: 'Frog Hill', category: 'Hidden Gem', img: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?q=80&w=800&auto=format&fit=crop' },
-  { id: 'hg5', title: 'Air Itam Dam', category: 'Hidden Gem', img: 'https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?q=80&w=800&auto=format&fit=crop' },
-  { id: 'hg6', title: 'Gertak Sanggul', category: 'Hidden Gem', img: 'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?q=80&w=800&auto=format&fit=crop' },
-  { id: 'hg7', title: 'Bukit Genting', category: 'Hidden Gem', img: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop' },
-  { id: 'hg8', title: 'Balik Pulau Farms', category: 'Hidden Gem', img: 'https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?q=80&w=800&auto=format&fit=crop' },
-  { id: 'hg9', title: 'Penang Turf Club', category: 'Hidden Gem', img: 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=800&auto=format&fit=crop' },
-  { id: 'hg10', title: 'Bao Sheng Fruit Farm', category: 'Hidden Gem', img: 'https://images.unsplash.com/photo-1583209814683-c023dd293cc6?q=80&w=800&auto=format&fit=crop' },
+  { id: 'hg1', title: 'Ghost Museum', category: 'Hidden Gem', img: 'https://www.penangbook.my/uploads/experience/Cool%20Ghost%20Museum%20Penang%202_26079-1753667536.jpeg' },
+  { id: 'hg2', title: 'Cheong Fatt Tze Mansion', category: 'Hidden Gem', img: 'https://www.cheongfatttzemansion.com/wp-content/uploads/2024/11/cheong_fatt_tze.jpg' },
+  { id: 'hg3', title: 'Snake Temple', category: 'Hidden Gem', img: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/08/e9/88/1c/snake-temple.jpg?w=1200&h=-1&s=1' },
+  { id: 'hg4', title: 'Penang 3D Museum', category: 'Hidden Gem', img: 'https://penangtrickart.com/storage/2016/09/viper.jpg' },
+  { id: 'hg5', title: 'Tropical Spice Garden', category: 'Hidden Gem', img: 'https://mypenang.gov.my/uploads/directory/39/cover/TSG.jpg' },
+  { id: 'hg6', title: 'Avatar Secret Garden', category: 'Hidden Gem', img: 'https://img.atlasobscura.com/NeyinUaEzXTs4dy0jatDQ2AvM6SfzDzkwhx01XJkIHA/rt:fit/h:400/q:81/sm:1/scp:1/ar:1/aHR0cHM6Ly9hdGxh/cy1kZXYuczMuYW1h/em9uYXdzLmNvbS91/cGxvYWRzL3BsYWNl/X2ltYWdlcy81ZTJk/MDIxOS03Nzc0LTRl/ODAtOTVmNi0xNTRh/ZjRlZWY1MGI1OTg3/MWVkNzkzYWZjN2M3/Y2FfODIxREIzQUEt/OTY3NC00NEY3LUE3/RkYtODk1MEYwNDgw/MUM0XzFfMTA1X2Mu/anBlZw.jpg' },
+  { id: 'hg7', title: 'Pantai Kerachut', category: 'Hidden Gem', img: 'https://mypenang.gov.my/uploads/directory/55/cover/Penang-National-Park-1.jpg' },
+  { id: 'hg8', title: 'Frog Hill', category: 'Hidden Gem', img: 'https://www.agoda.com/wp-content/uploads/2024/07/Frog-hills-Penang.jpg' },
+  { id: 'hg9', title: 'Air Itam Dam', category: 'Hidden Gem', img: 'https://image-tc.galaxy.tf/wiwebp-d4cp4p0du9d8q1397y0h6v0k7/aerial-view-of-air-itam-dam-encircled-by-vibrant-green-trees.webp' },
+  { id: 'hg10', title: 'Bukit Genting', category: 'Hidden Gem', img: 'https://www.magictravelblog.com/wp-content/uploads/2012/01/Bukit-Genting-view.jpg' },
+  { id: 'hg11', title: 'Balik Pulau Farms', category: 'Hidden Gem', img: 'https://thesmartlocal.my/wp-content/uploads/2023/01/image4-5.jpg' },
+  { id: 'hg12', title: 'Floating Mosque', category: 'Hidden Gem', img: 'https://image-tc.galaxy.tf/wiwebp-7hyj83qhq1ni3fpnj27caye96/sunset-casts-a-warm-glow-over-the-penang-floating-mosque-silhouetted-against-the-vibrant-sky_standard.webp?crop=57%2C0%2C867%2C650' },
+  { id: 'hg13', title: 'Goat Farm', category: 'Hidden Gem', img: 'https://cartogramme.com/wp-content/uploads/2017/01/sanaan11.jpg' },
 
   // Adventure
-  { id: 'ad1', title: 'ESCAPE Theme Park', category: 'Adventure', img: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ad2', title: 'Entopia Butterfly Farm', category: 'Adventure', img: 'https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ad3', title: 'The Habitat', category: 'Adventure', img: 'https://images.unsplash.com/photo-1583209814683-c023dd293cc6?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ad4', title: 'The Gravityz', category: 'Adventure', img: 'https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ad5', title: 'Penang Hill Funicular', category: 'Adventure', img: 'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ad6', title: 'ATV Penang', category: 'Adventure', img: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ad7', title: 'Canopy Walk', category: 'Adventure', img: 'https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ad8', title: 'Zip Line Penang', category: 'Adventure', img: 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ad9', title: 'Hiking National Park', category: 'Adventure', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ad10', title: 'Water Sports', category: 'Adventure', img: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?q=80&w=800&auto=format&fit=crop' },
+  { id: 'ad1', title: 'ESCAPE Theme Park', category: 'Adventure', img: 'https://images.ctfassets.net/dsbipkqphva2/2dnLwGaTUp6uf99RbjPvRL/bf9691ef74ff3be24f05833f228c34ea/Snapinsta.app_120899053_352746602618381_5950580628685413884_n_1080.jpg?fm=webp' },
+  { id: 'ad2', title: 'The Top Theme Park', category: 'Adventure', img: 'https://s-light.tiket.photos/t/01E25EBZS3W0FY9GTG6C42E1SE/rsfit1600900gsm/eventThirdParty/2024/06/26/53cd5f5f-74e4-4364-8d43-eeb718ee5723-1719414014904-643c35036d6899741c866c254d661817.jpg' },
+  { id: 'ad3', title: 'The Top Rainbow skywalk', category: 'Adventure', img: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/12/68/24/e1/rainbow-skywalk.jpg?w=1200&h=-1&s=1' },
+  { id: 'ad4', title: 'Entopia Butterfly Farm', category: 'Adventure', img: 'https://malaysiatravel-assets.s3.amazonaws.com/images/20200507-u7j5o-entopia-penang-butterfly-farm-2-jpg' },
+  { id: 'ad5', title: 'The Habitat', category: 'Adventure', img: 'https://mypenang.gov.my/uploads/page/171/images/The-Habitat-Penang-Hills-Tree-Top-Walk.jpg' },
+  { id: 'ad6', title: 'The Gravityz', category: 'Adventure', img: 'https://media-cdn.tripadvisor.com/media/attractions-splice-spp-674x446/0a/c7/82/f5.jpg' },
+  { id: 'ad7', title: 'ATV Penang', category: 'Adventure', img: 'https://image.kkday.com/v2/image/get/c_fill%2Cq_55%2Ct_webp%2Cw_960/s1.kkday.com/product_114497/20201222033135_CmF8Z/png' },
+  { id: 'ad8', title: 'Water Sports', category: 'Adventure', img: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/09/52/41/73/seahorse-watersports.jpg?w=500&h=-1&s=1' },
 
   // Local Culture
-  { id: 'lc1', title: 'Clan Jetties', category: 'Local Culture', img: 'https://www.wonderfulmalaysia.com/attractions/files/2011/07/clan-jetties-georgetown-7.jpg' },
-  { id: 'lc2', title: 'Pinang Peranakan Mansion', category: 'Local Culture', img: 'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?q=80&w=800&auto=format&fit=crop' },
-  { id: 'lc3', title: 'Khoo Kongsi', category: 'Local Culture', img: 'https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?q=80&w=800&auto=format&fit=crop' },
-  { id: 'lc4', title: 'Little India', category: 'Local Culture', img: 'https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?q=80&w=800&auto=format&fit=crop' },
-  { id: 'lc5', title: 'Chinatown Penang', category: 'Local Culture', img: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?q=80&w=800&auto=format&fit=crop' },
-  { id: 'lc6', title: 'Reclining Buddha Temple', category: 'Local Culture', img: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop' },
-  { id: 'lc7', title: 'Dhammikarama Temple', category: 'Local Culture', img: 'https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?q=80&w=800&auto=format&fit=crop' },
-  { id: 'lc8', title: 'Sri Mariamman Temple', category: 'Local Culture', img: 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=800&auto=format&fit=crop' },
-  { id: 'lc9', title: "St. George's Church", category: 'Local Culture', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop' },
-  { id: 'lc10', title: 'Penang State Museum', category: 'Local Culture', img: 'https://images.unsplash.com/photo-1583209814683-c023dd293cc6?q=80&w=800&auto=format&fit=crop' },
+  { id: 'lc1', title: 'Clan Jetties', category: 'Local Culture', img: 'https://res.klook.com/image/upload/fl_lossy.progressive,w_1200,h_630,c_fill,q_85/Clan_Jetties_of_Penang_jvca40.jpg' },
+  { id: 'lc2', title: 'Pinang Peranakan Mansion', category: 'Local Culture', img: 'https://lh3.googleusercontent.com/proxy/zW94Ms3Q8_HJO62KFpBsazHViqDgWdSLlkml693txGvxtGk-o0C7FU9Udp3E2n8jcBXnAfg6lkZl0VIITiRzTdvWmdI' },
+  { id: 'lc3', title: 'Little India', category: 'Local Culture', img: 'https://upload.wikimedia.org/wikipedia/commons/0/0f/Penanglittleindiaarch.jpg' },
+  { id: 'lc4', title: 'Chinatown Penang', category: 'Local Culture', img: 'https://feastoftravel.com/wp-content/uploads/2024/01/dsc_0288-1-scaled.jpg' },
+  { id: 'lc5', title: 'Reclining Buddha Temple', category: 'Local Culture', img: 'https://mypenang.gov.my/uploads/page/120/images/15-Reclining-Buddha.JPG' },
+  { id: 'lc6', title: 'Dhammikarama Temple', category: 'Local Culture', img: 'https://www.mir.com.my/leofoo/Thai-amulets/Penang/Dhammikarama_Burmese_Temple/images/Burmese_temple_Penang_A.jpg' },
+  { id: 'lc7', title: 'Sri Mariamman Temple', category: 'Local Culture', img: 'https://image-tc.galaxy.tf/wiwebp-6vh918qzc0xtdc06yrsdzsxy6/a-view-of-the-sri-mahamariamman-temple-featuring-intricate-statues-adorning-its-front-facade.webp' },
+  { id: 'lc8', title: 'St. George\'s Church', category: 'Local Culture', img: 'https://mypenang.gov.my/uploads/directory/768/images/street-harmony-2.jpg' },
+  { id: 'lc9', title: 'Penang State Museum', category: 'Local Culture', img: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2f/b6/0d/de/caption.jpg?w=500&h=500&s=1' },
 
   // Instagrammable
-  { id: 'ig1', title: 'George Town Street Art', category: 'Instagrammable', img: 'https://tripjive.com/wp-content/uploads/2024/01/Muntri-Street-George-Town-Murals.jpg' },
-  { id: 'ig2', title: 'Hin Bus Depot', category: 'Instagrammable', img: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ig3', title: 'Chew Jetty Bridge', category: 'Instagrammable', img: 'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ig4', title: 'Penang Hill Skywalk', category: 'Instagrammable', img: 'https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ig5', title: 'Umbrella Alley', category: 'Instagrammable', img: 'https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ig6', title: 'Tan Jetty', category: 'Instagrammable', img: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ig7', title: 'Street Art Cafe', category: 'Instagrammable', img: 'https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ig8', title: 'Blue Mansion', category: 'Instagrammable', img: 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ig9', title: 'Rainbow Skywalk', category: 'Instagrammable', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop' },
-  { id: 'ig10', title: 'Chulia Street', category: 'Instagrammable', img: 'https://images.unsplash.com/photo-1583209814683-c023dd293cc6?q=80&w=800&auto=format&fit=crop' },
+  { id: 'ig1', title: 'Hin Bus Depot', category: 'Instagrammable', img: 'https://www.malaymail.com/uploads/imported_images/2017/2017-09/hin_bus_depot2.jpg' },
+  { id: 'ig2', title: 'Chew Jetty Bridge', category: 'Instagrammable', img: 'https://platinumcharters.com.my/wp-content/uploads/2022/02/Penang.jpg' },
+  { id: 'ig3', title: 'Umbrella Alley', category: 'Instagrammable', img: 'https://www.awaygowe.com/wp-content/uploads/2020/07/things-to-do-in-penang-malaysia-img_7310.jpg' },
+  { id: 'ig4', title: 'Tan Jetty', category: 'Instagrammable', img: 'https://gtwhi.com.my/wp-content/uploads/2019/04/Tan-Jetty.jpg' },
+  { id: 'ig5', title: 'Blue Mansion', category: 'Instagrammable', img: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0b/3d/9b/3b/side-courtyard-spiral.jpg?w=900&h=500&s=1' },
 
   // Shopping
-  { id: 'sh1', title: 'Gurney Plaza', category: 'Shopping', img: 'https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?q=80&w=800&auto=format&fit=crop' },
-  { id: 'sh2', title: 'Design Village', category: 'Shopping', img: 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=800&auto=format&fit=crop' },
-  { id: 'sh3', title: 'Queensbay Mall', category: 'Shopping', img: 'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?q=80&w=800&auto=format&fit=crop' },
-  { id: 'sh4', title: '1st Avenue Mall', category: 'Shopping', img: 'https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?q=80&w=800&auto=format&fit=crop' },
-  { id: 'sh5', title: 'Sunway Carnival', category: 'Shopping', img: 'https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?q=80&w=800&auto=format&fit=crop' },
-  { id: 'sh6', title: 'Penang Times Square', category: 'Shopping', img: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?q=80&w=800&auto=format&fit=crop' },
-  { id: 'sh7', title: 'Prangin Mall', category: 'Shopping', img: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop' },
-  { id: 'sh8', title: 'Straits Quay', category: 'Shopping', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop' },
-  { id: 'sh9', title: 'Batu Ferringhi Market', category: 'Shopping', img: 'https://images.unsplash.com/photo-1583209814683-c023dd293cc6?q=80&w=800&auto=format&fit=crop' },
-  { id: 'sh10', title: 'Chowrasta Market', category: 'Shopping', img: 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=800&auto=format&fit=crop' },
+  { id: 'sh1', title: 'Gurney Plaza', category: 'Shopping', img: 'https://upload.wikimedia.org/wikipedia/commons/3/32/Gurney_Plaza_at_night.jpg' },
+  { id: 'sh2', title: 'Design Village', category: 'Shopping', img: 'https://archello.s3.eu-central-1.amazonaws.com/images/2019/10/09/07-Design-Village.1570589942.3457.jpg' },
+  { id: 'sh3', title: 'Queensbay Mall', category: 'Shopping', img: 'https://www.medisata.com/assets/images/wisata/luar-queensbay-mall-penang.jpg' },
+  { id: 'sh4', title: '1st Avenue Mall', category: 'Shopping', img: 'https://www.1st-avenuepenang.com.my/wp-content/uploads/2021/06/1st-Avenue-Mall-for-stamp-no-parksonDIY-1200x800.jpg' },
+  { id: 'sh5', title: 'Sunway Carnival', category: 'Shopping', img: 'https://www.sunwaycarnival.com/static/Sunway-Carnival-Mall-1019-SP-copy-1684394749386/w768.jpg' },
+  { id: 'sh6', title: 'Penang Times Square', category: 'Shopping', img: 'https://image-tc.galaxy.tf/wijpeg-dcpmwicyit5int6a0zwcud631/penang-times-square.jpg' },
+  { id: 'sh7', title: 'Prangin Mall', category: 'Shopping', img: 'https://media.penang360.my/file/penang360/shopping/jpg-cover-prangin-mall-DxzmQPPL.jpg' },
+  { id: 'sh8', title: 'Straits Quay', category: 'Shopping', img: 'https://media.timeout.com/images/103738347/image.jpg' },
+  { id: 'sh9', title: 'Batu Ferringhi Market', category: 'Shopping', img: 'https://media.timeout.com/images/101777229/image.jpg' },
+  { id: 'sh10', title: 'Chowrasta Market', category: 'Shopping', img: 'https://i.ytimg.com/vi/rCT6qT_vdUM/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLCJS-nqPmc7PBDKjbSQ5ylwbz8sVQ' },
+  { id: 'sh11', title: 'IKEA', category: 'Shopping', img: 'https://static.wixstatic.com/media/071e78_adfc6a0bdf17434697a691013e1ff215~mv2.jpg/v1/fill/w_905,h_443,al_c,q_85,enc_avif,quality_auto/071e78_adfc6a0bdf17434697a691013e1ff215~mv2.jpg' },
 
   // Relax & Wellness
-  { id: 'rw1', title: 'Batu Ferringhi Beach', category: 'Relax & Wellness', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop' },
-  { id: 'rw2', title: 'Tanjung Bungah Beach', category: 'Relax & Wellness', img: 'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?q=80&w=800&auto=format&fit=crop' },
-  { id: 'rw3', title: 'Teluk Bahang Beach', category: 'Relax & Wellness', img: 'https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?q=80&w=800&auto=format&fit=crop' },
-  { id: 'rw4', title: 'Monkey Beach', category: 'Relax & Wellness', img: 'https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?q=80&w=800&auto=format&fit=crop' },
-  { id: 'rw5', title: 'Penang Botanic Gardens', category: 'Relax & Wellness', img: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?q=80&w=800&auto=format&fit=crop' },
-  { id: 'rw6', title: 'Tropical Fruit Farm', category: 'Relax & Wellness', img: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop' },
-  { id: 'rw7', title: 'Penang Hill Spa', category: 'Relax & Wellness', img: 'https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?q=80&w=800&auto=format&fit=crop' },
-  { id: 'rw8', title: 'Eastin Hotel Spa', category: 'Relax & Wellness', img: 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?q=80&w=800&auto=format&fit=crop' },
-  { id: 'rw9', title: 'Hard Rock Resort', category: 'Relax & Wellness', img: 'https://images.unsplash.com/photo-1583209814683-c023dd293cc6?q=80&w=800&auto=format&fit=crop' },
-  { id: 'rw10', title: 'Chi The Spa', category: 'Relax & Wellness', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=800&auto=format&fit=crop' },
+  { id: 'rw1', title: 'Tanjung Bungah Beach', category: 'Relax & Wellness', img: 'https://www.agoda.com/wp-content/uploads/2020/08/Batu-Ferringhi-Beach-where-to-stay-in-Penang-Malaysia.jpg' },
+  { id: 'rw2', title: 'Teluk Bahang Beach', category: 'Relax & Wellness', img: 'https://penang.attractionsinmalaysia.com/img/photoState/penang/TelukBahang%20Beach/3.jpg' },
+  { id: 'rw3', title: 'Monkey Beach', category: 'Relax & Wellness', img: 'https://www.loka.my/_next/image?url=https%3A%2F%2Fdh7n5x4o1fca6.cloudfront.net%2Fapi%2Fv1%2Floka%2Fdownload%2Foptimize%2Fassets_loka%2Fattraction%2Fmonkey-beach%2Fimage%2FFirefly_a_snady_and_sunny_Monkey_beach_penang_99548.jpg%3Fquality%3D80%26width%3D768%26height%3D768%26format%3Dwebp%26progressive%3Dtrue&w=1920&q=75' },
+  { id: 'rw4', title: 'Penang Botanical Gardens', category: 'Relax & Wellness', img: 'https://web14.bernama.com/storage/photos/d66b78c0e603ef79153ae00e520b19ed66c5f5f124707' },
+  { id: 'rw5', title: 'Tropical Fruit Farm', category: 'Relax & Wellness', img: 'https://penang.attractionsinmalaysia.com/img/photoState/penang/tropicalFruitFarm/1.jpg' },
+  { id: 'rw6', title: 'Spa', category: 'Relax & Wellness', img: 'https://static.wixstatic.com/media/96c671_2dfc3042b793432692a2c2440901d9d0~mv2.png/v1/fill/w_640,h_436,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/96c671_2dfc3042b793432692a2c2440901d9d0~mv2.png' },
 ]
 
 function TripSetupContent() {
@@ -416,8 +425,8 @@ function TripSetupContent() {
                 <p className="text-center text-gray-600 max-w-xl mx-auto mb-12 text-lg">Select the types of destinations and food places you'd like us to include in your personalized itinerary.</p>
 
                 {/* Category Selection Bar */}
-                <div className="w-full flex overflow-x-auto pb-2 mb-6 scrollbar-hide snap-x justify-start md:justify-center">
-                  <div className="flex gap-2 md:gap-3 px-4 md:px-0">
+                <div className="w-full overflow-x-auto pb-2 mb-6 scrollbar-hide snap-x">
+                  <div className="flex gap-2 md:gap-3 px-4 md:px-8 w-max mx-auto">
                     {categories.map(cat => {
                       const isActive = activeCategory === cat;
                       const isRec = cat === RECOMMENDED_CATEGORY;
@@ -425,15 +434,14 @@ function TripSetupContent() {
                         <button
                           key={cat}
                           onClick={() => setActiveCategory(cat)}
-                          className={`snap-center whitespace-nowrap px-4 py-1.5 md:px-5 md:py-2 rounded-full font-medium text-xs md:text-sm transition-all duration-300 flex items-center gap-1.5 ${
-                            isActive
+                          className={`snap-center whitespace-nowrap px-4 py-1.5 md:px-5 md:py-2 rounded-full font-medium text-xs md:text-sm transition-all duration-300 flex items-center gap-1.5 ${isActive
                               ? isRec
                                 ? 'bg-gradient-to-r from-[#C9A84C] to-[#A68A3D] text-white shadow-lg shadow-[#C9A84C]/30'
                                 : 'bg-[#1A1A2E] text-white shadow-md'
                               : isRec
                                 ? 'bg-[#C9A84C]/10 border border-[#C9A84C]/40 text-[#A68A3D] hover:bg-[#C9A84C]/20'
                                 : 'bg-white border border-gray-200 text-gray-500 hover:border-[#1A1A2E] hover:text-[#1A1A2E]'
-                          }`}
+                            }`}
                         >
                           {isRec && <Sparkles className="w-3.5 h-3.5" />}
                           {cat}

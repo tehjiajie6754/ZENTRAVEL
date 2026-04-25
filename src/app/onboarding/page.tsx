@@ -66,6 +66,7 @@ export default function OnboardingPage() {
     { code: 'es', flag: '🇪🇸', label: 'Español',            available: false },
     { code: 'id', flag: '🇮🇩', label: 'Bahasa Indonesia',   available: false },
     { code: 'ar', flag: '🇸🇦', label: 'العربية',            available: false },
+    { code: 'hi', flag: '🇮🇳', label: 'हिन्दी',              available: false },
   ]
 
   const LANG_META: Record<string, { flag: string; short: string }> = {
