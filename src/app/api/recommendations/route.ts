@@ -25,7 +25,7 @@ export async function POST(req: Request) {
   try {
     const { preferences, activities, foodCount, destCount } = await req.json()
 
-    const apiKey = 'AIzaSyBeeHoaNp-ZnZdeJWyfz6LEm6OR0dCGYHs'
+    const apiKey = process.env.GEMINI_API_KEY || ''
     const genAI = new GoogleGenerativeAI(apiKey)
 
     // Keep the activity list compact to save tokens.

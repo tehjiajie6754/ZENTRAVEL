@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-    const apiKey = 'AIzaSyBeeHoaNp-ZnZdeJWyfz6LEm6OR0dCGYHs';
+    const apiKey = process.env.GEMINI_API_KEY || '';
     const genAI = new GoogleGenerativeAI(apiKey);
 
     // Extract system prompt (if any)

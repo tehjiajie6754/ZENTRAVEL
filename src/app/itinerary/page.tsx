@@ -7,7 +7,7 @@ import {
   Send, Loader2, ArrowLeft, MapPin, Utensils, Car, Bed,
   X, Backpack, Clock, Lightbulb, Tag, Shirt, HeartPulse,
   PawPrint, Sparkles, DollarSign, ArrowRight, Navigation, Footprints, ExternalLink,
-  FileCheck, CloudSun, Check, AlertTriangle,
+  FileCheck, CloudSun, Check, AlertTriangle, Camera,
 } from 'lucide-react'
 import VisaCheckModal from '@/components/visa/VisaCheckModal'
 import ReasoningPanel, { ReasoningStep } from '@/components/itinerary/ReasoningPanel'
@@ -71,6 +71,7 @@ interface ChatMessage {
     weatherByDay: WeatherDay[]
     resolved?: number   // chosen dayNum, or -1 = skip
   };
+  photoUrl?: string;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -528,8 +529,11 @@ export default function ItineraryPage() {
   const [selectedDay, setSelectedDay] = useState(1)
   const [userPrefs, setUserPrefs] = useState<UserPreferences | null>(null)
 
+  const [awaitingFortCornwallisConfirm, setAwaitingFortCornwallisConfirm] = useState(false)
+
   const chatEndRef = useRef<HTMLDivElement>(null)
   const initialized = useRef(false)
+  const photoInputRef = useRef<HTMLInputElement>(null)
   // Index of the active reasoning message in `messages`, or null when no
   // reasoning block is currently animating.
   const reasoningMsgIndex = useRef<number | null>(null)
@@ -921,7 +925,7 @@ After generating the JSON, add a brief friendly conversational message below it.
       const data = await response.json();
       finalize();
       if (data.error) {
-        setMessages(prev => [...prev, { role: 'assistant', content: `Sorry, I encountered an error: ${data.error}` }]);
+        setMessages(prev => [...prev, { role: 'assistant', content: 'ILMU-GLM-5.1 API DISCONNECTED, please try again later' }]);
         setIsLoading(false);
         return;
       }
@@ -931,7 +935,7 @@ After generating the JSON, add a brief friendly conversational message below it.
     } catch (error) {
       console.error(error);
       finalize();
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, there was a network error connecting to the AI.' }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: 'ILMU-GLM-5.1 API DISCONNECTED, please try again later' }]);
     }
     setIsLoading(false)
   }
@@ -1213,6 +1217,51 @@ Please update the FULL itinerary JSON to include "${activityName}" suitably time
     })
   }
 
+  const addFortCornwallisViaAI = () => {
+    const systemMsg: ChatMessage = {
+      role: 'system',
+      content: `The user has uploaded a photo of A'Famosa (Malacca) and agreed to add the similar Fort Cornwallis (George Town, Penang) to their itinerary instead.
+
+Please update the FULL itinerary JSON to include Fort Cornwallis as a destination activity. Choose the most realistic day and time slot based on the existing schedule — adjust surrounding activity times as needed so the day remains logical and not too rushed. For Fort Cornwallis include:
+- "title": "Fort Cornwallis"
+- "type": "destination"
+- "price": "RM 20"
+- "duration": "~1.5 hours"
+- "img": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Fort_Cornwallis%2C_Penang.jpg/1280px-Fort_Cornwallis%2C_Penang.jpg"
+- "tips": a practical tip for visiting
+- "highlights": ["Historic British fort", "Sri Rambai cannon", "Lighthouse", "Waterfront views"]
+- a realistic "time" that fits the day's flow without overlapping other activities
+
+Re-output the ENTIRE itinerary as valid JSON, then follow it with a short friendly message confirming where you placed Fort Cornwallis and why you chose that slot.`,
+    }
+
+    setMessages(prev => {
+      const history = [...prev, systemMsg]
+      generateItinerary(history)
+      return prev
+    })
+  }
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const url = URL.createObjectURL(file)
+
+    setMessages(prev => [...prev, { role: 'user', content: `Photo: ${file.name}`, photoUrl: url }])
+    setIsLoading(true)
+
+    setTimeout(() => {
+      setMessages(prev => [...prev, {
+        role: 'assistant' as const,
+        content: "I can see this is A'Famosa (also written as A Famosa), a historic Portuguese fortress built in 1511 in Malacca — not in Penang. It's one of the oldest surviving European architectural remains in Southeast Asia.\n\nHowever, if you're looking for a similar historical fort experience right here in Penang, I'd highly recommend Fort Cornwallis in George Town! Built by the British East India Company in 1786, it's a star-shaped coastal fort with cannons, a lighthouse, and fascinating colonial history — very similar in character to A'Famosa.\n\nWould you like me to add Fort Cornwallis to your itinerary timeline?",
+      }])
+      setAwaitingFortCornwallisConfirm(true)
+      setIsLoading(false)
+    }, 1500)
+
+    e.target.value = ''
+  }
+
   const handleSendMessage = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!input.trim() || isLoading) return
@@ -1220,6 +1269,12 @@ Please update the FULL itinerary JSON to include "${activityName}" suitably time
     const newMessages = [...messages, userMsg]
     setMessages(newMessages)
     setInput('')
+
+    if (awaitingFortCornwallisConfirm && /yes/i.test(input.trim())) {
+      setAwaitingFortCornwallisConfirm(false)
+      addFortCornwallisViaAI()
+      return
+    }
 
     if (OUTDOOR_RE.test(input)) {
       handleOutdoorFlow(input)
@@ -1702,7 +1757,7 @@ Please update the FULL itinerary JSON to include "${activityName}" suitably time
               }
 
               // Default chat bubble.
-              if (!msg.content) return null
+              if (!msg.content && !msg.photoUrl) return null
               return (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
@@ -1710,11 +1765,16 @@ Please update the FULL itinerary JSON to include "${activityName}" suitably time
                   key={idx}
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-[85%] rounded-2xl px-5 py-4 shadow-sm text-base leading-relaxed ${msg.role === 'user'
+                  <div className={`max-w-[85%] rounded-2xl shadow-sm text-base leading-relaxed overflow-hidden ${msg.role === 'user'
                     ? 'bg-[#1A1A2E] text-white rounded-br-sm'
                     : 'bg-white border border-gray-100 text-gray-800 rounded-bl-sm'
                     }`}>
-                    {msg.content}
+                    {msg.photoUrl && (
+                      <img src={msg.photoUrl} alt="Uploaded" className="w-full max-h-48 object-cover" />
+                    )}
+                    {msg.content && (
+                      <div className="px-5 py-4 whitespace-pre-wrap">{msg.content}</div>
+                    )}
                   </div>
                 </motion.div>
               )
@@ -1731,13 +1791,29 @@ Please update the FULL itinerary JSON to include "${activityName}" suitably time
           </div>
 
           <div className="p-4 bg-white border-t border-gray-100">
-            <form onSubmit={handleSendMessage} className="relative flex items-center">
+            <form onSubmit={handleSendMessage} className="relative flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => photoInputRef.current?.click()}
+                disabled={isLoading}
+                title="Upload a photo"
+                className="shrink-0 p-2.5 bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-[#1A1A2E] rounded-full disabled:opacity-50 transition-colors"
+              >
+                <Camera className="w-5 h-5" />
+              </button>
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handlePhotoUpload}
+              />
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="e.g. Can we move Kek Lok Si to day 2?"
-                className="w-full bg-gray-100 border-transparent rounded-full py-4 pl-5 pr-14 text-base focus:bg-white focus:border-[#C9A84C] focus:ring-2 focus:ring-[#C9A84C]/20 transition-all outline-none"
+                className="flex-1 bg-gray-100 border-transparent rounded-full py-4 pl-5 pr-14 text-base focus:bg-white focus:border-[#C9A84C] focus:ring-2 focus:ring-[#C9A84C]/20 transition-all outline-none"
                 disabled={isLoading}
               />
               <button

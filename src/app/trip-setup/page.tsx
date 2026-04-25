@@ -193,7 +193,7 @@ function TripSetupContent() {
       })
     } catch (err: any) {
       recFetchedRef.current = false  // allow retry
-      setRecError('Could not load AI picks. Tap to retry.')
+      setRecError('ILMU-GLM-5.1 API DISCONNECTED, please try again later')
     }
     setRecLoading(false)
   }

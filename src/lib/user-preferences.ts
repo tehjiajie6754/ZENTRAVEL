@@ -9,6 +9,7 @@ export interface UserPreferences {
   accommodation?: 'simple' | 'experience'
   food?: 'fuel' | 'destination'
   dietary?: string
+  flightClass?: 'economy' | 'business'
   updatedAt?: string
 }
 
@@ -58,6 +59,10 @@ const FOOD_LABEL: Record<string, string> = {
   fuel: 'Food is Fuel',
   destination: 'Food is the Destination',
 }
+const FLIGHT_CLASS_LABEL: Record<string, string> = {
+  economy: 'Economy',
+  business: 'Business',
+}
 
 export const formatPreferences = (p: UserPreferences | null): { label: string; value: string }[] => {
   if (!p) return []
@@ -71,6 +76,7 @@ export const formatPreferences = (p: UserPreferences | null): { label: string; v
   if (p.accommodation) rows.push({ label: 'Stay Style', value: ACCOMMODATION_LABEL[p.accommodation] ?? p.accommodation })
   if (p.food) rows.push({ label: 'Food Mindset', value: FOOD_LABEL[p.food] ?? p.food })
   if (p.dietary && p.dietary.trim()) rows.push({ label: 'Dietary', value: p.dietary.trim() })
+  if (p.flightClass) rows.push({ label: 'Flight Class', value: FLIGHT_CLASS_LABEL[p.flightClass] ?? p.flightClass })
   return rows
 }
 

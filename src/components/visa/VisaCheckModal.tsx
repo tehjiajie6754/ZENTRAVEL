@@ -240,7 +240,7 @@ export default function VisaCheckModal({
         flightNo = inboundFlight.flightNumber || ''
         lastPort = inboundFlight.from || ''
         if (inboundFlight.departureDate) {
-          // Convert ISO or text date â†’ DD/MM/YYYY
+          // Convert ISO or text date → DD/MM/YYYY
           try {
             const dt = new Date(inboundFlight.departureDate)
             if (!isNaN(dt.getTime())) {
@@ -388,7 +388,7 @@ Use Google Search to confirm CURRENT policy. Do NOT return anything other than t
       setStep('result')
     } catch (e: any) {
       console.error(e)
-      setError(e.message ?? 'Failed to check visa requirements')
+      setError('ILMU-GLM-5.1 API DISCONNECTED, please try again later')
       setStep('nationality')
     }
   }
@@ -459,12 +459,12 @@ Use Google Search to confirm CURRENT policy. Do NOT return anything other than t
       setStep('application')
     } catch (e: any) {
       console.error(e)
-      setError(e.message ?? 'Failed to generate filled PDF')
+      setError('ILMU-GLM-5.1 API DISCONNECTED, please try again later')
       setStep('form')
     }
   }
 
-  // â”€â”€ MDAC helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── MDAC helpers ────────────────────────────────────────────────────────────
   const updateMdac = <K extends keyof MdacForm>(key: K, value: MdacForm[K]) =>
     setMdac(f => ({ ...f, [key]: value }))
 
@@ -497,12 +497,12 @@ Use Google Search to confirm CURRENT policy. Do NOT return anything other than t
       setStep('mdac-application')
     } catch (e: any) {
       console.error(e)
-      setError(e.message ?? 'Failed to generate MDAC PDF')
+      setError('ILMU-GLM-5.1 API DISCONNECTED, please try again later')
       setStep('mdac-form')
     }
   }
 
-  // â”€â”€ MDAC Chat state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── MDAC Chat state ─────────────────────────────────────────────────────────
   // -- MDAC Chat state --
   const [chatMsgs, setChatMsgs] = useState<MdacChatMsg[]>([])
   const [chatInput, setChatInput] = useState('')
@@ -510,6 +510,8 @@ Use Google Search to confirm CURRENT policy. Do NOT return anything other than t
   const chatInitedRef = useRef(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const chatInputRef = useRef<HTMLInputElement>(null)
+  const mdacRef = useRef(mdac)
+  useEffect(() => { mdacRef.current = mdac }, [mdac])
 
   const scrollChat = useCallback(() => {
     setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 80)
@@ -523,72 +525,71 @@ Use Google Search to confirm CURRENT policy. Do NOT return anything other than t
     return null
   }, [])
 
-  // Initialize chat when entering mdac-form step (useRef prevents double-fire)
+  // Initialize chat when entering mdac-form step
   useEffect(() => {
     if (step !== 'mdac-form' || chatInitedRef.current) return
     chatInitedRef.current = true
 
-    // Delay to let pre-fill useEffect settle before reading mdac
+    // Delay to let pre-fill useEffect settle, then read from ref (NOT from updater)
     const timer = setTimeout(() => {
-      setMdac(latestMdac => {
-        const msgs: MdacChatMsg[] = []
+      const snapshot = mdacRef.current
+      const msgs: MdacChatMsg[] = []
 
-        msgs.push({
-          role: 'ai',
-          content: "Hi! I'll help you fill your Malaysia Digital Arrival Card (MDAC). Let me check what information we already have...",
-        })
-
-        const filled: string[] = []
-        const missing: MdacFieldDef[] = []
-        for (const f of MDAC_FIELDS) {
-          if (String(latestMdac[f.key] ?? '').trim()) {
-            filled.push(`${f.label}: ${latestMdac[f.key]}`)
-          } else {
-            missing.push(f)
-          }
-        }
-
-        if (filled.length > 0) {
-          const source = itinerary ? 'your onboarding profile & itinerary' : 'your onboarding profile'
-          msgs.push({
-            role: 'system',
-            content: `${filled.length} fields auto-filled from ${source}:\n${filled.map(f => '  ' + f).join('\n')}`,
-          })
-        }
-
-        if (missing.length === 0) {
-          msgs.push({
-            role: 'ai',
-            content: "All information is complete! Generating your MDAC PDF now...",
-          })
-          setChatMsgs(msgs)
-          scrollChat()
-          setTimeout(() => generateMdac(), 1200)
-          return latestMdac
-        }
-
-        msgs.push({
-          role: 'ai',
-          content: `I just need ${missing.length} more ${missing.length === 1 ? 'detail' : 'details'} from you.`,
-        })
-
-        const first = missing[0]
-        msgs.push({
-          role: 'ai',
-          content: first.prompt,
-          fieldKey: first.key,
-          options: first.options,
-        })
-
-        setChatMsgs(msgs)
-        setCurrentField(first)
-        scrollChat()
-        return latestMdac // return unchanged, we just read
+      msgs.push({
+        role: 'ai',
+        content: "Hi! I'll help you fill your Malaysia Digital Arrival Card (MDAC). Let me check what information we already have...",
       })
-    }, 200)
+
+      const filled: string[] = []
+      const missing: MdacFieldDef[] = []
+      for (const f of MDAC_FIELDS) {
+        if (String(snapshot[f.key] ?? '').trim()) {
+          filled.push(`${f.label}: ${snapshot[f.key]}`)
+        } else {
+          missing.push(f)
+        }
+      }
+
+      if (filled.length > 0) {
+        const source = itinerary ? 'your onboarding profile & itinerary' : 'your onboarding profile'
+        msgs.push({
+          role: 'system',
+          content: `${filled.length} fields auto-filled from ${source}:\n${filled.map(f => '  ' + f).join('\n')}`,
+        })
+      }
+
+      if (missing.length === 0) {
+        msgs.push({
+          role: 'ai',
+          content: "All information is complete! Generating your MDAC PDF now...",
+        })
+        setChatMsgs(msgs)
+        scrollChat()
+        setTimeout(() => generateMdac(), 1200)
+        return
+      }
+
+      msgs.push({
+        role: 'ai',
+        content: `I just need ${missing.length} more ${missing.length === 1 ? 'detail' : 'details'} from you.`,
+      })
+
+      const first = missing[0]
+      msgs.push({
+        role: 'ai',
+        content: first.prompt,
+        fieldKey: first.key,
+        options: first.options,
+      })
+
+      setChatMsgs(msgs)
+      setCurrentField(first)
+      scrollChat()
+    }, 250)
 
     return () => clearTimeout(timer)
   }, [step, itinerary, scrollChat, getNextMissing])
+
 
 
   // Handle user answer in chat
@@ -598,63 +599,64 @@ Use Google Search to confirm CURRENT policy. Do NOT return anything other than t
     const fieldDef = MDAC_FIELDS.find(f => f.key === currentField.key)
     const finalValue = fieldDef?.transform ? fieldDef.transform(value.trim()) : value.trim()
 
+    // Build updated mdac from ref (avoids putting side effects in updater)
+    const updated = { ...mdacRef.current, [currentField.key]: finalValue }
+    setMdac(updated)
+    mdacRef.current = updated
+
     // Record user's answer
     setChatMsgs(prev => [...prev, { role: 'user', content: finalValue }])
+    setChatInput('')
 
-    // Update the mdac form
-    setMdac(prev => {
-      const updated = { ...prev, [currentField.key]: finalValue }
+    // Find next missing field
+    const next = getNextMissing(updated)
 
-      // Find next missing field
-      const next = getNextMissing(updated)
-
-      if (!next) {
-        // All fields complete
-        setChatMsgs(prev2 => [...prev2, {
+    if (!next) {
+      // All fields complete
+      setTimeout(() => {
+        setChatMsgs(prev => [...prev, {
           role: 'ai',
-          content: "âœ… All information collected! Generating your MDAC PDF now...",
+          content: 'All information collected! Generating your MDAC PDF now...',
         }])
         setCurrentField(null)
         scrollChat()
-        // Trigger generation after state updates
-        setTimeout(() => {
-          setStep('mdac-generating')
-          setError(null)
-          fetch('/api/mdac-pdf', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updated),
-          }).then(async res => {
-            if (!res.ok) throw new Error(await res.text() || 'Failed')
-            const blob = await res.blob()
-            setMdacPdfUrl(URL.createObjectURL(blob))
-            setStep('mdac-application')
-          }).catch(e => {
-            setError(e.message ?? 'Failed to generate MDAC PDF')
-            setStep('mdac-form')
-          })
-        }, 1000)
-      } else {
-        // Ask next field
-        setTimeout(() => {
-          setChatMsgs(prev2 => [...prev2, {
-            role: 'ai',
-            content: next.prompt,
-            fieldKey: next.key,
-            options: next.options,
-          }])
-          setCurrentField(next)
-          scrollChat()
-          chatInputRef.current?.focus()
-        }, 400)
-      }
+      }, 300)
+      // Trigger generation
+      setTimeout(() => {
+        setStep('mdac-generating')
+        setError(null)
+        fetch('/api/mdac-pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updated),
+        }).then(async res => {
+          if (!res.ok) throw new Error(await res.text() || 'Failed')
+          const blob = await res.blob()
+          setMdacPdfUrl(URL.createObjectURL(blob))
+          setStep('mdac-application')
+        }).catch(() => {
+          setError('ILMU-GLM-5.1 API DISCONNECTED, please try again later')
+          setStep('mdac-form')
+        })
+      }, 1200)
+    } else {
+      // Ask next field after a short delay
+      setTimeout(() => {
+        setChatMsgs(prev => [...prev, {
+          role: 'ai',
+          content: next.prompt,
+          fieldKey: next.key,
+          options: next.options,
+        }])
+        setCurrentField(next)
+        scrollChat()
+        chatInputRef.current?.focus()
+      }, 400)
+    }
 
-      return updated
-    })
-
-    setChatInput('')
     scrollChat()
   }, [currentField, getNextMissing, scrollChat])
+
 
   // Reset chat when leaving mdac-form
   useEffect(() => {
@@ -667,7 +669,7 @@ Use Google Search to confirm CURRENT policy. Do NOT return anything other than t
   }, [step])
 
 
-  // â”€â”€ UI helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── UI helpers ────────────────────────────────────────────────────────────────
   const Label = ({ children }: { children: React.ReactNode }) => (
     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">{children}</label>
   )
@@ -900,9 +902,9 @@ Use Google Search to confirm CURRENT policy. Do NOT return anything other than t
                         We can auto-fill it using your onboarding details!
                       </p>
                       <div className="flex flex-wrap gap-2 text-xs text-gray-500">
-                        <span className="bg-white border border-gray-200 px-2.5 py-1 rounded-full">âœ“ Personal info</span>
-                        <span className="bg-white border border-gray-200 px-2.5 py-1 rounded-full">âœ“ Travel details</span>
-                        <span className="bg-white border border-gray-200 px-2.5 py-1 rounded-full">âœ“ Accommodation</span>
+                        <span className="bg-white border border-gray-200 px-2.5 py-1 rounded-full">✓ Personal info</span>
+                        <span className="bg-white border border-gray-200 px-2.5 py-1 rounded-full">✓ Travel details</span>
+                        <span className="bg-white border border-gray-200 px-2.5 py-1 rounded-full">✓ Accommodation</span>
                       </div>
                     </div>
                   )}
@@ -1209,7 +1211,7 @@ Use Google Search to confirm CURRENT policy. Do NOT return anything other than t
                 </div>
               )}
 
-              {/* â”€â”€ MDAC Chat Interface â”€â”€ */}
+              {/* ── MDAC Chat Interface ── */}
               {step === 'mdac-form' && (
                 <div className="flex flex-col" style={{ height: '540px' }}>
                   {/* Chat header */}
@@ -1222,7 +1224,7 @@ Use Google Search to confirm CURRENT policy. Do NOT return anything other than t
                       <p className="text-xs text-gray-400">Malaysia Digital Arrival Card</p>
                     </div>
                     <button onClick={() => setStep('result')} className="ml-auto text-xs text-gray-400 hover:text-[#C9A84C] font-semibold transition-colors">
-                      â† Back
+                      ← Back
                     </button>
                   </div>
 

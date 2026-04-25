@@ -8,7 +8,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Empty transcript' }, { status: 400 })
     }
 
-    const genAI = new GoogleGenerativeAI('AIzaSyBeeHoaNp-ZnZdeJWyfz6LEm6OR0dCGYHs')
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
     const prompt = `You are a travel preference extractor. Analyse this voice input and extract travel preferences.
 Voice: "${transcript}"

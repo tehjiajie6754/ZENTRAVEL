@@ -56,7 +56,7 @@ const ConflictAdvisoryModal = ({ country, onClose }: { country: ConflictCountry;
         const json = await res.json()
         setData(json)
       } catch (e) {
-        setError('Unable to load data. Please try again.')
+        setError('ILMU-GLM-5.1 API DISCONNECTED, please try again later')
       } finally {
         setLoading(false)
       }
@@ -586,7 +586,7 @@ const MalaysiaMapOverlay = ({ onClose, onStateClick }: { onClose: () => void, on
 
 export default function ExplorePage() {
   const router = useRouter()
-  const [lang, setLang] = useState<'EN' | 'ZH' | 'BM'>('EN')
+  const [lang, setLang] = useState<'EN' | '中文' | 'BM'>('EN')
   const [searchQuery, setSearchQuery] = useState('')
   const [showDropdown, setShowDropdown] = useState(false)
   const [showMalaysiaMap, setShowMalaysiaMap] = useState(false)

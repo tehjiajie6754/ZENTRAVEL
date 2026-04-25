@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { Send, Upload, Paperclip, X, Compass, CheckCircle, ArrowRight, CreditCard, Globe, FileText, Banknote, QrCode, Mic, MicOff } from 'lucide-react'
-import { useLanguage } from '@/contexts/LanguageContext'
+import { useLanguage, Language } from '@/contexts/LanguageContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import { saveUserPreferences } from '@/lib/user-preferences'
+import { OnboardingStorage } from '@/lib/onboarding-storage'
 
 interface MultiOption {
   id: string
@@ -34,7 +35,7 @@ interface ChatOption {
 }
 
 export default function OnboardingPage() {
-  useLanguage()
+  const { t, language, setLanguage } = useLanguage()
   const router = useRouter()
   const [messages, setMessages] = useState<Message[]>([])
   const [inputMessage, setInputMessage] = useState('')
@@ -52,6 +53,26 @@ export default function OnboardingPage() {
   const [isAnalyzingVoice, setIsAnalyzingVoice] = useState(false)
   const [showCreditCardModal, setShowCreditCardModal] = useState(false)
   const [creditCard, setCreditCard] = useState({ number: '', name: '', expiry: '', cvv: '' })
+  const [showLangPicker, setShowLangPicker] = useState(false)
+
+  const LANGUAGES: { code: Language | string; flag: string; label: string; available: boolean }[] = [
+    { code: 'en', flag: '🇬🇧', label: 'English',           available: true  },
+    { code: 'ms', flag: '🇲🇾', label: 'Bahasa Melayu',     available: true  },
+    { code: 'zh', flag: '🇨🇳', label: '中文',               available: true  },
+    { code: 'ja', flag: '🇯🇵', label: '日本語',              available: false },
+    { code: 'ko', flag: '🇰🇷', label: '한국어',              available: false },
+    { code: 'fr', flag: '🇫🇷', label: 'Français',           available: false },
+    { code: 'de', flag: '🇩🇪', label: 'Deutsch',            available: false },
+    { code: 'es', flag: '🇪🇸', label: 'Español',            available: false },
+    { code: 'id', flag: '🇮🇩', label: 'Bahasa Indonesia',   available: false },
+    { code: 'ar', flag: '🇸🇦', label: 'العربية',            available: false },
+  ]
+
+  const LANG_META: Record<string, { flag: string; short: string }> = {
+    en: { flag: '🇬🇧', short: 'EN'   },
+    ms: { flag: '🇲🇾', short: 'BM'   },
+    zh: { flag: '🇨🇳', short: '中文' },
+  }
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -67,24 +88,36 @@ export default function OnboardingPage() {
 
   const genId = (prefix: string = 'm') => `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 
+  // When language toggles, reset the whole conversation so every stored string re-renders in the new language
   useEffect(() => {
-    if (!welcomeTriggeredRef.current) {
-      welcomeTriggeredRef.current = true
-      setTimeout(() => {
-        const msgId = genId('welcome')
-        const welcomeMessage: Message = {
-          id: msgId,
-          text: '🌍✈️ **Welcome to Zen Travel!**\n\nI\'m your Personal Travel Concierge — here to craft journeys that truly fit you.',
-          sender: 'bot',
-          type: 'options',
-          options: [
-            { id: 'get-started', text: '✨ Begin My Journey', icon: <ArrowRight className="w-4 h-4" />, action: () => handleGetStarted(msgId) },
-          ]
-        }
-        setMessages([welcomeMessage])
-      }, 800)
-    }
-  }, [])
+    if (!welcomeTriggeredRef.current) return // skip initial mount — handled by the welcome effect below
+    welcomeTriggeredRef.current = false
+    setMessages([])
+    setCompletedSteps(new Set())
+    setAnsweredMessageIds(new Set())
+    setMultiSelectState({})
+    setTextInputState({})
+    setProfileFormState({})
+  }, [language]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Show welcome message on mount and after every language reset
+  useEffect(() => {
+    if (welcomeTriggeredRef.current) return
+    welcomeTriggeredRef.current = true
+    const timer = setTimeout(() => {
+      const msgId = genId('welcome')
+      setMessages([{
+        id: msgId,
+        text: t('onboarding.welcome'),
+        sender: 'bot',
+        type: 'options',
+        options: [
+          { id: 'get-started', text: t('onboarding.begin_journey'), icon: <ArrowRight className="w-4 h-4" />, action: () => handleGetStarted(msgId) },
+        ]
+      }])
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [language]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const addBotMessage = (text: string, options?: ChatOption[], type?: Message['type']) => {
     const newMessage: Message = {
@@ -108,23 +141,17 @@ export default function OnboardingPage() {
   }
 
   const handleGetStarted = (messageId: string) => {
-    addUserMessage('✨ Begin My Journey')
+    addUserMessage(t('onboarding.begin_journey'))
     setAnsweredMessageIds(prev => new Set([...prev, messageId]))
     setTimeout(() => {
-      addBotMessage(
-        'Let\'s get you set up! Complete the checklist below to unlock your full travel experience:',
-        [], 'checklist'
-      )
+      addBotMessage(t('onboarding.get_started'), [], 'checklist')
     }, 800)
   }
 
   const handleProfileSetup = () => {
-    addUserMessage('📝 Set up my profile')
+    addUserMessage(t('onboarding.profile.cta'))
     setTimeout(() => {
-      addBotMessage(
-        '**Let\'s set up your traveller profile!**\n\nPlease fill in your details below:',
-        [], 'form'
-      )
+      addBotMessage(t('onboarding.profile.intro'), [], 'form')
     }, 500)
   }
 
@@ -199,19 +226,19 @@ export default function OnboardingPage() {
   }
 
   const handlePreferencesSetup = () => {
-    addUserMessage('🌍 Set travel preferences')
+    addUserMessage(t('onboarding.pref.cta'))
     setTimeout(() => {
-      addBotMessage('Help me understand your travel style so I can plan the perfect trip for you.')
+      addBotMessage(t('onboarding.pref.intro'))
       setTimeout(() => askPrefQ1(), 1000)
     }, 500)
   }
 
   const askPrefQ1 = () => {
     askSinglePreference(
-      '🧭 **1. What\'s your travel pace?**',
+      t('onboarding.pref.q1'),
       [
-        { id: 'packed', text: '🔥 Packed & Explorative — I want to see everything' },
-        { id: 'leisure', text: '🌿 Leisure & Flexible — I prefer to take it slow' },
+        { id: 'packed', text: t('onboarding.pref.q1.packed') },
+        { id: 'leisure', text: t('onboarding.pref.q1.leisure') },
       ],
       (id) => { setUserData((p: any) => ({ ...p, pace: id })); askPrefQ2() }
     )
@@ -219,10 +246,10 @@ export default function OnboardingPage() {
 
   const askPrefQ2 = () => {
     askSinglePreference(
-      '💰 **2. What\'s your budget style?**',
+      t('onboarding.pref.q2'),
       [
-        { id: 'luxury', text: '💎 Luxury Splurge — I\'m here to treat myself' },
-        { id: 'budget', text: '💸 Budget-Friendly — Smart spending all the way' },
+        { id: 'luxury', text: t('onboarding.pref.q2.luxury') },
+        { id: 'budget', text: t('onboarding.pref.q2.budget') },
       ],
       (id) => { setUserData((p: any) => ({ ...p, budget: id })); askPrefQ3() }
     )
@@ -230,14 +257,14 @@ export default function OnboardingPage() {
 
   const askPrefQ3 = () => {
     askMultiPreference(
-      '🎯 **3. What attracts you to a destination?**\n\n(Choose all that apply, can choose more than 1)',
+      t('onboarding.pref.q3'),
       [
-        { id: 'scenery', text: '🌄 Natural Scenery' },
-        { id: 'landmarks', text: '🗼 Famous Landmarks' },
-        { id: 'hidden', text: '🧭 Hidden Gems' },
-        { id: 'food', text: '🍜 Famous Food' },
-        { id: 'history', text: '🏛️ Historical Sites' },
-        { id: 'culture', text: '🎨 Local Culture & Art' },
+        { id: 'scenery', text: t('onboarding.pref.q3.scenery') },
+        { id: 'landmarks', text: t('onboarding.pref.q3.landmarks') },
+        { id: 'hidden', text: t('onboarding.pref.q3.hidden') },
+        { id: 'food', text: t('onboarding.pref.q3.food') },
+        { id: 'history', text: t('onboarding.pref.q3.history') },
+        { id: 'culture', text: t('onboarding.pref.q3.culture') },
       ],
       (selected) => { setUserData((p: any) => ({ ...p, attractions: selected.map(s => s.id) })); askPrefQ4() }
     )
@@ -245,10 +272,10 @@ export default function OnboardingPage() {
 
   const askPrefQ4 = () => {
     askSinglePreference(
-      '⚡ **4. What kind of activities do you prefer?**',
+      t('onboarding.pref.q4'),
       [
-        { id: 'active', text: '🧗 Physically Active — Adventure, movement, excitement' },
-        { id: 'relaxing', text: '🧘 Mentally Relaxing — Calm, scenic, and peaceful' },
+        { id: 'active', text: t('onboarding.pref.q4.active') },
+        { id: 'relaxing', text: t('onboarding.pref.q4.relaxing') },
       ],
       (id) => { setUserData((p: any) => ({ ...p, activities: id })); askPrefQ5() }
     )
@@ -256,10 +283,10 @@ export default function OnboardingPage() {
 
   const askPrefQ5 = () => {
     askSinglePreference(
-      '🏨 **5. What\'s your accommodation style?**',
+      t('onboarding.pref.q5'),
       [
-        { id: 'simple', text: '🛏️ Just a Place to Sleep — Simple & practical' },
-        { id: 'experience', text: '✨ Experience-Focused Stay — Unique hotels & vibes' },
+        { id: 'simple', text: t('onboarding.pref.q5.simple') },
+        { id: 'experience', text: t('onboarding.pref.q5.experience') },
       ],
       (id) => { setUserData((p: any) => ({ ...p, accommodation: id })); askPrefQ6() }
     )
@@ -267,10 +294,10 @@ export default function OnboardingPage() {
 
   const askPrefQ6 = () => {
     askSinglePreference(
-      '🍽️ **6. How important is food during your trip?**',
+      t('onboarding.pref.q6'),
       [
-        { id: 'fuel', text: '⛽ Food is Fuel — Just something to keep me going' },
-        { id: 'destination', text: '🍜 Food is the Destination — I travel for the food' },
+        { id: 'fuel', text: t('onboarding.pref.q6.fuel') },
+        { id: 'destination', text: t('onboarding.pref.q6.destination') },
       ],
       (id) => { setUserData((p: any) => ({ ...p, food: id })); askPrefQ7() }
     )
@@ -278,9 +305,20 @@ export default function OnboardingPage() {
 
   const askPrefQ7 = () => {
     askTextPreference(
-      '⚠️ **7. Any dietary restrictions or dislikes?**\n\n(Allergies, preferences, or foods you avoid)',
-      'e.g., vegetarian, no seafood, nut allergy...',
-      (text) => { setUserData((p: any) => ({ ...p, dietary: text })); finishPreferences() }
+      t('onboarding.pref.q7'),
+      t('onboarding.pref.q7.placeholder'),
+      (text) => { setUserData((p: any) => ({ ...p, dietary: text })); askPrefQ8() }
+    )
+  }
+
+  const askPrefQ8 = () => {
+    askSinglePreference(
+      t('onboarding.pref.q8'),
+      [
+        { id: 'economy', text: t('onboarding.pref.q8.economy') },
+        { id: 'business', text: t('onboarding.pref.q8.business') },
+      ],
+      (id) => { setUserData((p: any) => ({ ...p, flightClass: id })); finishPreferences() }
     )
   }
 
@@ -295,16 +333,15 @@ export default function OnboardingPage() {
         accommodation: next.accommodation,
         food: next.food,
         dietary: next.dietary,
+        flightClass: next.flightClass,
       })
       return next
     })
     setTimeout(() => {
-      addBotMessage(
-        '🎉 **All Set!**\n\n✅ **Travel Preferences Saved!**\n\nYour AI Itinerary Planner will now craft trips tailored exactly to your style, interests, and needs. Fret not! You can always head to your profile and update your preference'
-      )
+      addBotMessage(t('onboarding.pref.done'))
       setCompletedSteps(prev => new Set([...prev, 'preferences']))
       setTimeout(() => {
-        addBotMessage('Here\'s your updated checklist:', [], 'checklist')
+        addBotMessage(t('onboarding.checklist.updated'), [], 'checklist')
       }, 1500)
     }, 500)
   }
@@ -312,12 +349,9 @@ export default function OnboardingPage() {
   // ============ Payment Flow ============
 
   const handlePaymentSetup = () => {
-    addUserMessage('💳 Set up payment')
+    addUserMessage(t('onboarding.payment.cta'))
     setTimeout(() => {
-      addBotMessage(
-        '**Let\'s set up your payment method.**\n\nChoose your preferred payment option:',
-        [], 'payment-setup'
-      )
+      addBotMessage(t('onboarding.payment.intro'), [], 'payment-setup')
     }, 500)
   }
 
@@ -346,8 +380,13 @@ export default function OnboardingPage() {
     creditCard.cvv.replace(/\D/g, '').length >= 3
 
   const handlePaymentSelection = (payment: string) => {
-    const names: Record<string, string> = { 'credit-card': 'Credit Card', 'paypal': 'PayPal', 'bank-transfer': 'Bank Transfer', 'crypto': 'Crypto Wallet' }
-    addUserMessage(`Activate ${names[payment] || payment}`)
+    const names: Record<string, string> = {
+      'credit-card': t('onboarding.payment.credit_card'),
+      'paypal': t('onboarding.payment.paypal'),
+      'bank-transfer': t('onboarding.payment.bank'),
+      'crypto': t('onboarding.payment.crypto'),
+    }
+    addUserMessage(`${t('onboarding.payment.activate')} ${names[payment] || payment}`)
     setPendingPayment(payment)
     if (payment === 'credit-card') {
       setCreditCard({ number: '', name: '', expiry: '', cvv: '' })
@@ -359,7 +398,7 @@ export default function OnboardingPage() {
 
   const handleConsentAgreed = () => {
     setTimeout(() => {
-      addBotMessage('✅ **Payment method activated!** You\'re all set to book your first trip.')
+      addBotMessage(t('onboarding.payment.done'))
       setCompletedSteps(prev => new Set([...prev, 'payment']))
       setTimeout(() => showOnboardingCompletion(), 2000)
     }, 1000)
@@ -367,12 +406,12 @@ export default function OnboardingPage() {
 
   const showOnboardingCompletion = () => {
     setTimeout(() => {
-      addBotMessage('🎉 **Congratulations!** Your Zen Travel account is fully set up and ready to go!\n\nYou can now explore destinations, create AI-powered itineraries, and book seamless travel experiences.')
+      addBotMessage(t('onboarding.complete.msg'))
     }, 500)
     setTimeout(() => {
       addBotMessage(
-        'Ready to explore? Click below to start your journey!',
-        [{ id: 'go-home', text: '✨ Start Exploring', icon: <ArrowRight className="w-4 h-4" />, action: () => { setTimeout(() => router.push('/home'), 1000) } }],
+        t('onboarding.complete.cta_msg'),
+        [{ id: 'go-home', text: t('onboarding.complete.cta'), icon: <ArrowRight className="w-4 h-4" />, action: () => { setTimeout(() => router.push('/home'), 1000) } }],
         'completion'
       )
     }, 1500)
@@ -392,7 +431,7 @@ export default function OnboardingPage() {
     if (typeof window === 'undefined') return
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (!SR) {
-      addBotMessage('⚠️ Voice input requires Chrome or Edge browser. Please type your preferences instead.')
+      addBotMessage(t('onboarding.voice.unsupported'))
       return
     }
 
@@ -464,15 +503,15 @@ export default function OnboardingPage() {
         saveUserPreferences({
           pace: next.pace, budget: next.budget, attractions: next.attractions,
           activities: next.activities, accommodation: next.accommodation,
-          food: next.food, dietary: next.dietary,
+          food: next.food, dietary: next.dietary, flightClass: next.flightClass,
         })
         return next
       })
 
       const summary = data.summary || 'Your travel profile has been updated.'
-      addBotMessage(`✅ **Voice Preferences Saved!**\n\n${summary}\n\n*Continue with the questions above, or speak again to add more details.*`)
+      addBotMessage(`${t('onboarding.voice.saved')}\n\n${summary}\n\n${t('onboarding.voice.continue')}`)
     } catch {
-      addBotMessage('⚠️ Voice analysis failed. Please try again or use the text options.')
+      addBotMessage(t('onboarding.voice.error'))
     } finally {
       setIsLoading(false)
       setIsAnalyzingVoice(false)
@@ -587,7 +626,7 @@ export default function OnboardingPage() {
                   disabled={selected.size === 0}
                   className="px-6 py-2 bg-[#C9A84C] text-white rounded-lg hover:bg-[#b8973e] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
                 >
-                  Save & Continue
+                  {t('onboarding.save_continue')}
                 </button>
               </div>
             )}
@@ -626,14 +665,14 @@ export default function OnboardingPage() {
       case 'form': {
         const isAnswered = answeredMessageIds.has(message.id)
         const fields = [
-          { l: 'Full Name', p: 'Your full name' },
-          { l: 'Phone', p: '+60 12 345 6789' },
-          { l: 'Nationality', p: 'Malaysian' },
-          { l: 'Passport Number', p: 'A12345678' },
-          { l: 'MBTI', p: 'e.g., INFJ, ENTP' },
-          { l: 'Email Address', p: 'you@example.com' },
+          { key: 'Full Name',      l: t('onboarding.profile.field.full_name'),   p: t('onboarding.profile.field.full_name.placeholder') },
+          { key: 'Phone',          l: t('onboarding.profile.field.phone'),        p: t('onboarding.profile.field.phone.placeholder') },
+          { key: 'Nationality',    l: t('onboarding.profile.field.nationality'),  p: t('onboarding.profile.field.nationality.placeholder') },
+          { key: 'Passport Number',l: t('onboarding.profile.field.passport'),     p: t('onboarding.profile.field.passport.placeholder') },
+          { key: 'MBTI',           l: t('onboarding.profile.field.mbti'),         p: t('onboarding.profile.field.mbti.placeholder') },
+          { key: 'Email Address',  l: t('onboarding.profile.field.email'),        p: t('onboarding.profile.field.email.placeholder') },
         ]
-        const isFormComplete = fields.every(f => (profileFormState[message.id + f.l] || '').trim() !== '')
+        const isFormComplete = fields.every(f => (profileFormState[message.id + f.key] || '').trim() !== '')
         return (
           <div className="mt-3">
             {message.text && <div className="text-sm leading-relaxed mb-4 ml-2"><ReactMarkdown>{message.text}</ReactMarkdown></div>}
@@ -641,13 +680,13 @@ export default function OnboardingPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {fields.map(f => (
-                    <div key={f.l}>
+                    <div key={f.key}>
                       <label className="block text-sm font-medium text-gray-700 mb-1">{f.l} <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         placeholder={f.p}
-                        value={profileFormState[message.id + f.l] || ''}
-                        onChange={(e) => setProfileFormState(prev => ({ ...prev, [message.id + f.l]: e.target.value }))}
+                        value={profileFormState[message.id + f.key] || ''}
+                        onChange={(e) => setProfileFormState(prev => ({ ...prev, [message.id + f.key]: e.target.value }))}
                         disabled={isAnswered}
                         className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C9A84C] focus:border-transparent ${isAnswered ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
                       />
@@ -659,13 +698,22 @@ export default function OnboardingPage() {
                     <button
                       disabled={!isFormComplete}
                       onClick={() => {
+                        const profileData: Record<string, string> = {}
+                        fields.forEach(f => { profileData[f.key] = profileFormState[message.id + f.key] || '' })
+                        const existing = OnboardingStorage.load()
+                        OnboardingStorage.save({
+                          data: { ...(existing?.data ?? {}), ...profileData },
+                          currentStep: existing?.currentStep ?? 2,
+                          lastUpdated: new Date().toISOString(),
+                          completedSteps: [...new Set([...(existing?.completedSteps ?? []), 1])],
+                        })
                         setAnsweredMessageIds(prev => new Set([...prev, message.id]))
                         setCompletedSteps(prev => new Set([...prev, 'profile']))
-                        addBotMessage('✅ **Profile saved!** Here\'s your updated checklist:', [], 'checklist')
+                        addBotMessage(t('onboarding.profile.saved'), [], 'checklist')
                       }}
                       className={`px-6 py-2 rounded-lg transition-colors font-medium text-sm ${isFormComplete ? 'bg-[#C9A84C] text-white hover:bg-[#b8973e]' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
                     >
-                      Save & Continue
+                      {t('onboarding.save_continue')}
                     </button>
                   </div>
                 )}
@@ -680,9 +728,9 @@ export default function OnboardingPage() {
             {message.text && <div className="text-sm leading-relaxed mb-4"><ReactMarkdown>{message.text}</ReactMarkdown></div>}
             <div className="space-y-4 mt-3 w-full">
               {[
-                { id: 'profile', title: '📝 Step 1: Traveller Profile', description: 'Set up your personal details', completed: completedSteps.has('profile'), locked: false, action: () => handleProfileSetup() },
-                { id: 'preferences', title: '🌍 Step 2: Travel Preferences', description: 'Configure your travel style', completed: completedSteps.has('preferences'), locked: !completedSteps.has('profile'), action: () => handlePreferencesSetup() },
-                { id: 'payment', title: '💳 Step 3: Payment Setup', description: 'Add your payment method', completed: completedSteps.has('payment'), locked: !completedSteps.has('preferences'), action: () => handlePaymentSetup() },
+                { id: 'profile', title: t('onboarding.checklist.step1.title'), description: t('onboarding.checklist.step1.desc'), completed: completedSteps.has('profile'), locked: false, action: () => handleProfileSetup() },
+                { id: 'preferences', title: t('onboarding.checklist.step2.title'), description: t('onboarding.checklist.step2.desc'), completed: completedSteps.has('preferences'), locked: !completedSteps.has('profile'), action: () => handlePreferencesSetup() },
+                { id: 'payment', title: t('onboarding.checklist.step3.title'), description: t('onboarding.checklist.step3.desc'), completed: completedSteps.has('payment'), locked: !completedSteps.has('preferences'), action: () => handlePaymentSetup() },
               ].map(item => (
                 <div key={item.id} className={`flex flex-col sm:flex-row sm:items-center justify-between w-full p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200 ${item.locked ? 'opacity-60' : ''}`}>
                   <div className="flex flex-col mb-2 sm:mb-0">
@@ -695,10 +743,10 @@ export default function OnboardingPage() {
                       disabled={item.locked}
                       className={`ml-6 px-6 py-2 text-sm rounded-md transition-colors w-fit ${item.locked ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#C9A84C] text-white hover:bg-[#b8973e]'}`}
                     >
-                      {item.locked ? 'Locked 🔒' : 'Start Now'}
+                      {item.locked ? t('onboarding.checklist.locked') : t('onboarding.checklist.start')}
                     </button>
                   ) : (
-                    <div className="ml-6 px-5 py-2 bg-emerald-500 text-white text-sm rounded-md w-fit font-medium">Done ✓</div>
+                    <div className="ml-6 px-5 py-2 bg-emerald-500 text-white text-sm rounded-md w-fit font-medium">{t('onboarding.checklist.done')}</div>
                   )}
                 </div>
               ))}
@@ -711,10 +759,10 @@ export default function OnboardingPage() {
             {message.text && <div className="text-sm leading-relaxed mb-4"><ReactMarkdown>{message.text}</ReactMarkdown></div>}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
               {[
-                { id: 'credit-card', name: '💳 Credit Card', description: 'Visa, Mastercard, Amex', icon: <CreditCard className="w-6 h-6" /> },
-                { id: 'paypal', name: '🅿️ PayPal', description: 'Fast online payments', icon: <Globe className="w-6 h-6" /> },
-                { id: 'bank-transfer', name: '🏦 Bank Transfer', description: 'Direct bank payment', icon: <Banknote className="w-6 h-6" /> },
-                { id: 'crypto', name: '₿ Crypto Wallet', description: 'Bitcoin, Ethereum', icon: <QrCode className="w-6 h-6" /> },
+                { id: 'credit-card', name: t('onboarding.payment.credit_card'), description: t('onboarding.payment.credit_card.desc'), icon: <CreditCard className="w-6 h-6" /> },
+                { id: 'paypal', name: t('onboarding.payment.paypal'), description: t('onboarding.payment.paypal.desc'), icon: <Globe className="w-6 h-6" /> },
+                { id: 'bank-transfer', name: t('onboarding.payment.bank'), description: t('onboarding.payment.bank.desc'), icon: <Banknote className="w-6 h-6" /> },
+                { id: 'crypto', name: t('onboarding.payment.crypto'), description: t('onboarding.payment.crypto.desc'), icon: <QrCode className="w-6 h-6" /> },
               ].map(opt => (
                 <div key={opt.id} className="p-4 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200">
                   <div className="flex items-center space-x-3 mb-2">
@@ -722,7 +770,7 @@ export default function OnboardingPage() {
                     <h4 className="font-medium text-gray-800">{opt.name}</h4>
                   </div>
                   <p className="text-sm text-gray-600 mb-3">{opt.description}</p>
-                  <button onClick={() => handlePaymentSelection(opt.id)} className="w-full px-3 py-2 bg-[#C9A84C] text-white text-sm rounded-md hover:bg-[#b8973e] transition-colors">Activate</button>
+                  <button onClick={() => handlePaymentSelection(opt.id)} className="w-full px-3 py-2 bg-[#C9A84C] text-white text-sm rounded-md hover:bg-[#b8973e] transition-colors">{t('onboarding.payment.activate')}</button>
                 </div>
               ))}
             </div>
@@ -734,9 +782,9 @@ export default function OnboardingPage() {
             <div className="p-4 bg-[#C9A84C]/10 border border-[#C9A84C]/30 rounded-lg">
               <div className="flex items-center space-x-2 mb-2">
                 <CheckCircle className="w-5 h-5 text-[#C9A84C]" />
-                <span className="font-medium text-[#1A1A2E]">Onboarding Complete!</span>
+                <span className="font-medium text-[#1A1A2E]">{t('onboarding.complete.done')}</span>
               </div>
-              <p className="text-sm text-gray-700">Your Zen Travel account is fully set up.</p>
+              <p className="text-sm text-gray-700">{t('onboarding.complete.done_msg')}</p>
             </div>
             {message.options?.map(option => (
               <button key={option.id} onClick={option.action}
@@ -780,8 +828,8 @@ export default function OnboardingPage() {
         <div className="absolute inset-0 pointer-events-none opacity-[0.025]" style={{ backgroundImage: 'radial-gradient(circle, #1A1A2E 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
       </div>
 
-      {/* Skip Onboarding Button */}
-      <div className="absolute top-4 left-6 z-20">
+      {/* Top bar: Skip + Language toggle */}
+      <div className="absolute top-4 left-6 right-6 z-20 flex items-center justify-between">
         <button
           onClick={() => router.push('/home')}
           className="text-sm font-medium px-4 py-2 rounded-lg transition-colors"
@@ -789,8 +837,68 @@ export default function OnboardingPage() {
           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(26,26,46,0.12)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'rgba(26,26,46,0.07)')}
         >
-          Skip Onboarding
+          {t('onboarding.skip')}
         </button>
+        <div className="relative">
+          <button
+            onClick={() => setShowLangPicker(p => !p)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200"
+            style={{ background: 'rgba(26,26,46,0.07)', color: '#1A1A2E', border: '1px solid rgba(201,168,76,0.25)', backdropFilter: 'blur(8px)' }}
+          >
+            <span>{LANG_META[language]?.flag ?? '🌐'}</span>
+            <span>{LANG_META[language]?.short ?? language.toUpperCase()}</span>
+            <svg className={`w-3 h-3 transition-transform duration-200 ${showLangPicker ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
+          </button>
+
+          <AnimatePresence>
+            {showLangPicker && (
+              <>
+                {/* backdrop to close on outside click */}
+                <div className="fixed inset-0 z-30" onClick={() => setShowLangPicker(false)} />
+                <motion.div
+                  initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 top-full mt-2 z-40 w-56 rounded-2xl shadow-2xl overflow-hidden"
+                  style={{ background: 'rgba(255,255,255,0.97)', border: '1px solid rgba(201,168,76,0.25)', backdropFilter: 'blur(16px)' }}
+                >
+                  <div className="px-3 py-2.5 border-b border-gray-100">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Select Language</p>
+                  </div>
+                  <div className="p-2 space-y-0.5">
+                    {LANGUAGES.map(lang => {
+                      const isActive = language === lang.code
+                      return (
+                        <button
+                          key={lang.code}
+                          disabled={!lang.available}
+                          onClick={() => {
+                            if (lang.available) {
+                              setLanguage(lang.code as Language)
+                              setShowLangPicker(false)
+                            }
+                          }}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-150 ${
+                            isActive
+                              ? 'bg-[#1A1A2E] text-white'
+                              : 'hover:bg-[#C9A84C]/10 text-[#1A1A2E]'
+                          }`}
+                        >
+                          <span className="text-base leading-none">{lang.flag}</span>
+                          <span className="flex-1 text-xs font-semibold">{lang.label}</span>
+                          {isActive && (
+                            <span className="text-[#C9A84C] text-xs">✓</span>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
       <div className="relative z-10 flex h-full">
@@ -873,18 +981,18 @@ export default function OnboardingPage() {
                 ))}
               </div>
               <span className="text-sm font-medium" style={{ color: '#C9A84C', animation: 'pulse 1.5s ease-in-out infinite' }}>
-                Listening...
+                {t('onboarding.voice.listening')}
               </span>
-              <span className="text-xs text-gray-400">Click mic to stop</span>
+              <span className="text-xs text-gray-400">{t('onboarding.voice.click_stop')}</span>
             </div>
           ) : (
             <div className="text-center space-y-1">
               <div className="flex items-center justify-center space-x-2">
                 <div className="w-2 h-2 rounded-full bg-emerald-400" style={{ boxShadow: '0 0 6px rgba(52,211,153,0.6)' }} />
-                <span className="text-xs text-gray-500 font-medium tracking-widest uppercase">Assistant Ready</span>
+                <span className="text-xs text-gray-500 font-medium tracking-widest uppercase">{t('onboarding.voice.ready')}</span>
               </div>
               {isAnalyzingVoice && (
-                <p className="text-xs" style={{ color: '#C9A84C' }}>Analysing your preferences...</p>
+                <p className="text-xs" style={{ color: '#C9A84C' }}>{t('onboarding.voice.analyzing')}</p>
               )}
             </div>
           )}
@@ -962,7 +1070,7 @@ export default function OnboardingPage() {
                   onChange={isRecording ? undefined : (e) => setInputMessage(e.target.value)}
                   onKeyDown={isRecording ? undefined : handleKeyDown}
                   readOnly={isRecording}
-                  placeholder={isRecording ? '🎤 Listening — speak now...' : 'Type a message or click the mic to speak...'}
+                  placeholder={isRecording ? t('onboarding.voice.listening') : t('onboarding.voice.type_or_speak')}
                   rows={1}
                   style={{ minHeight: '48px', maxHeight: '120px' }}
                   className={`w-full resize-none rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 ${
@@ -1032,8 +1140,8 @@ export default function OnboardingPage() {
             {/* Header */}
             <div className="px-6 pt-6 pb-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(201,168,76,0.15)' }}>
               <div>
-                <h3 className="text-lg font-semibold" style={{ color: '#1A1A2E', fontFamily: 'var(--font-heading, serif)' }}>Add Credit Card</h3>
-                <p className="text-xs text-gray-400 mt-0.5">Securely add your card details</p>
+                <h3 className="text-lg font-semibold" style={{ color: '#1A1A2E', fontFamily: 'var(--font-heading, serif)' }}>{t('onboarding.card.title')}</h3>
+                <p className="text-xs text-gray-400 mt-0.5">{t('onboarding.card.subtitle')}</p>
               </div>
               <button
                 onClick={() => setShowCreditCardModal(false)}
@@ -1070,13 +1178,13 @@ export default function OnboardingPage() {
                 {/* Bottom row: name + expiry */}
                 <div className="flex justify-between items-end relative z-10">
                   <div>
-                    <p className="text-[9px] uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>Cardholder</p>
+                    <p className="text-[9px] uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>{t('onboarding.card.cardholder')}</p>
                     <p className="text-sm tracking-wide font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
                       {creditCard.name.toUpperCase() || 'YOUR NAME'}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[9px] uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>Expires</p>
+                    <p className="text-[9px] uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>{t('onboarding.card.expires')}</p>
                     <p className="text-sm font-mono" style={{ color: 'rgba(255,255,255,0.85)' }}>
                       {creditCard.expiry || 'MM/YY'}
                     </p>
@@ -1088,7 +1196,7 @@ export default function OnboardingPage() {
               <div className="space-y-3">
                 {/* Card number */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Card Number</label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">{t('onboarding.card.number')}</label>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -1105,10 +1213,10 @@ export default function OnboardingPage() {
 
                 {/* Cardholder name */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Cardholder Name</label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">{t('onboarding.card.name')}</label>
                   <input
                     type="text"
-                    placeholder="As it appears on card"
+                    placeholder={t('onboarding.card.name_placeholder')}
                     value={creditCard.name}
                     onChange={e => setCreditCard(p => ({ ...p, name: e.target.value }))}
                     className="w-full px-3 py-2.5 border rounded-xl text-sm focus:outline-none transition-all"
@@ -1121,7 +1229,7 @@ export default function OnboardingPage() {
                 {/* Expiry + CVV */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Expiry</label>
+                    <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">{t('onboarding.card.expiry')}</label>
                     <input
                       type="text"
                       inputMode="numeric"
@@ -1136,7 +1244,7 @@ export default function OnboardingPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">CVV</label>
+                    <label className="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">{t('onboarding.card.cvv')}</label>
                     <input
                       type="password"
                       inputMode="numeric"
@@ -1159,7 +1267,7 @@ export default function OnboardingPage() {
                   onClick={() => setShowCreditCardModal(false)}
                   className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors"
                 >
-                  Cancel
+                  {t('onboarding.card.cancel')}
                 </button>
                 <button
                   disabled={!creditCardComplete}
@@ -1172,7 +1280,7 @@ export default function OnboardingPage() {
                   onMouseEnter={e => { if (creditCardComplete) e.currentTarget.style.background = '#b8973e' }}
                   onMouseLeave={e => { e.currentTarget.style.background = '#C9A84C' }}
                 >
-                  Confirm Card
+                  {t('onboarding.card.confirm')}
                 </button>
               </div>
             </div>
@@ -1188,14 +1296,14 @@ export default function OnboardingPage() {
               <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'rgba(201,168,76,0.1)' }}>
                 <FileText className="w-8 h-8" style={{ color: '#C9A84C' }} />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Terms & Conditions</h3>
-              <p className="text-sm text-gray-600 mb-6">By activating this payment method, you agree to our terms of service and privacy policy.</p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('onboarding.consent.title')}</h3>
+              <p className="text-sm text-gray-600 mb-6">{t('onboarding.consent.body')}</p>
               <div className="flex space-x-3">
                 <button
                   onClick={() => { setShowConsentModal(false); setPendingPayment('') }}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                 >
-                  Decline
+                  {t('onboarding.consent.decline')}
                 </button>
                 <button
                   onClick={() => { setShowConsentModal(false); handleConsentAgreed() }}
@@ -1204,7 +1312,7 @@ export default function OnboardingPage() {
                   onMouseEnter={e => (e.currentTarget.style.background = '#b8973e')}
                   onMouseLeave={e => (e.currentTarget.style.background = '#C9A84C')}
                 >
-                  I Agree
+                  {t('onboarding.consent.agree')}
                 </button>
               </div>
             </div>
